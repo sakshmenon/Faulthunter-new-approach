@@ -22,10 +22,10 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 						
  * POSSIBILITY OF SUCH DAMAGE. 						
  */						
-						
+
 // AX3 Main Code						
 // Dan Jackson, Karim Ladha, 2011-2012						
-						
+
 // Includes						
 #include <Compiler.h>						
 #include <TimeDelay.h>						
@@ -49,32 +49,32 @@
 #include "Settings.h"						
 #include "Logger.h"						
 //#include <string.h>						
-						
+
 // KL: 17-04-2014 Self test sequence						
 #include "AX3 SelfTest.h"						
-						
-						
+
+
 // Declarations						
 void RunAttached(void);						
 void RunLogging(void);						
 void TimedTasks(void);						
 void LedTasks(void);						
 void RunTestSequence(void);						
-						
+
 // Interrupts						
 void __attribute__((interrupt,auto_psv)) _DefaultInterrupt(void)						
 {						
  	static unsigned int INTCON1val;					
-	LED_SET(LED_MAGENTA);					
-	INTCON1val = INTCON1;					
-	Nop();					
-	Nop();					
-	Nop();					
-	Nop();					
-	INTCON1 = 0;					
+LED_SET(LED_MAGENTA);					
+INTCON1val = INTCON1;					
+Nop();					
+Nop();					
+Nop();					
+Nop();					
+INTCON1 = 0;					
     Reset();						
 }						
-						
+
 // RTC						
 void __attribute__((interrupt,auto_psv)) _RTCCInterrupt(void)						
 {						
@@ -82,37 +82,37 @@ void __attribute__((interrupt,auto_psv)) _RTCCInterrupt(void)
     RtcTasks();						
     //IFS3bits.RTCIF = 0;   // RtcTasks() services and clears the interrupt						
 }						
-						
+
 // Accel interrupt 1						
 void __attribute__((interrupt,auto_psv)) _INT1Interrupt(void)						
 {						
     LoggerAccelTasks();						
-	//IFS1bits.INT1IF = 0;  // DataTasks() services and clears the interrupt					
+//IFS1bits.INT1IF = 0;  // DataTasks() services and clears the interrupt					
 }						
-						
+
 // Accel interrupt 2						
 void __attribute__((interrupt,auto_psv)) _INT2Interrupt(void)						
 {						
     LoggerAccelTasks();						
-	//IFS1bits.INT2IF = 0;  // DataTasks() services and clears the interrupt					
+//IFS1bits.INT2IF = 0;  // DataTasks() services and clears the interrupt					
 }						
-						
+
 #ifdef USE_GYRO						
 // Gyro interrupt 1						
 void __attribute__((interrupt,auto_psv)) _INT3Interrupt(void)						
 {						
     LoggerGyroTasks();						
-	//IFS3bits.INT3IF = 0;  // DataTasks() services and clears the interrupt					
+//IFS3bits.INT3IF = 0;  // DataTasks() services and clears the interrupt					
 }						
-						
+
 // Gyro interrupt 2						
 void __attribute__((interrupt,auto_psv)) _INT4Interrupt(void)						
 {						
     LoggerGyroTasks();						
-	//IFS3bits.INT4IF = 0;  // DataTasks() services and clears the interrupt					
+//IFS3bits.INT4IF = 0;  // DataTasks() services and clears the interrupt					
 }						
 #endif						
-						
+
 // TMR1						
 void __attribute__((interrupt, shadow, auto_psv)) _T1Interrupt(void)						
 {						
@@ -120,65 +120,65 @@ void __attribute__((interrupt, shadow, auto_psv)) _T1Interrupt(void)
     {						
         ; // TODO: Precisely-timed single sampling						
     }						
-	//IFS0bits.T1IF = 0; // RtcTimerTasks() services and clears the interrupt					
+//IFS0bits.T1IF = 0; // RtcTimerTasks() services and clears the interrupt					
 }						
-						
+
 // CN						
 void __attribute__((interrupt, shadow, auto_psv)) _CNInterrupt(void)						
 {						
-	IFS1bits.CNIF = 0;					
+IFS1bits.CNIF = 0;					
 }						
-						
+
 #include <p24FJ256GB106.h>						
-						
-						
+
+
 // Restart flag						
 static unsigned char restart = 0;						
 static unsigned char inactive = 0;						
 static unsigned short lastTime = 0;						
-						
-						
-						
+
+
+
 #if 0						
 // Override write handler with non-overlapping version						
 #include "Utils/Util.h"						
 extern write_handler_t writeHandler;						
-						
+
 // write handler (usb_putchar() overflows, this won't)						
 static void UsbWrite(const void *buffer, unsigned int len)						
 {						
-	if (usb_write_length(buffer, len) < len)					
-	{					
-		// Flash warning				
-		LED_SET(LED_OFF); DelayMs(50); 				
-		LED_SET(LED_RED); DelayMs(50); 				
-		LED_SET(LED_YELLOW); DelayMs(50); 				
-		LED_SET(LED_OFF);				
-	}					
+if (usb_write_length(buffer, len) < len)					
+{					
+// Flash warning				
+LED_SET(LED_OFF); DelayMs(50); 				
+LED_SET(LED_RED); DelayMs(50); 				
+LED_SET(LED_YELLOW); DelayMs(50); 				
+LED_SET(LED_OFF);				
+}					
 }						
 #endif						
-						
-						
+
+
 // Main routine						
 int main(void)						
 {						
     // Initialization						
-	InitIO();			// I/O pins		
-	CLOCK_SOSCEN(); 	// For the RTC				
-	WaitForPrecharge();	// ~0.5mA current				
-						
-	// Peripherals - RTC and ADC always used					
+InitIO();			// I/O pins		
+CLOCK_SOSCEN(); 	// For the RTC				
+WaitForPrecharge();	// ~0.5mA current				
+
+// Peripherals - RTC and ADC always used					
     LED_SET(LED_BLUE);  // Blue LED during startup						
-	CLOCK_INTOSC();     // 8 MHz					
+CLOCK_INTOSC();     // 8 MHz					
     // RTC and 'software WDT'						
     RtcSwwdtReset();						
     RtcStartup();						
     RtcInterruptOn(0);  // Enable precise RTC (and software WDT)						
     LED_SET(LED_BLUE);  // Blue LED during startup (set again as RTC sync strobes LED)						
     // ADC						
-	AdcInit();					
+AdcInit();					
     AdcSampleWait();    // Ensure we have a valid battery level						
-						
+
     // Check the devices we have						
     NandInitialize();						
     NandVerifyDeviceId();						
@@ -186,13 +186,13 @@ int main(void)
 #ifdef USE_GYRO						
     GyroVerifyDeviceId();						
 #endif						
-						
+
 // Override write handler						
 //writeHandler = UsbWrite;						
-						
-	// Self test check - only actually executes on first run					
-	RunTestSequence();					
-						
+
+// Self test check - only actually executes on first run					
+RunTestSequence();					
+
     // If we haven't detected the NAND or accelerometer this could be the wrong firmware for this device (reset to bootloader)						
     if (!nandPresent)						
     {						
@@ -212,12 +212,12 @@ int main(void)
         #endif						
     	Reset();                // Reset					
     }						
-						
+
     // Read settings						
     restart = 0;						
     inactive = 0;						
     SettingsInitialize();               // Initialize settings from ROM						
-						
+
 LED_SET(LED_WHITE);         // White LED during later startup						
     FtlStartup();                       // FTL & NAND startup						
 {						
@@ -227,7 +227,7 @@ for (i = 0; i < 5 * 3; i++) { LED_SET(LED_RED); DelayMs(111); LED_SET(LED_GREEN)
     SettingsReadFile(SETTINGS_FILE);    // Read settings from script						
     // TODO: Make this "single binary file" mode optional on the settings just read						
     LoggerReadMetadata(DEFAULT_FILE);   // Read settings from the logging binary file						
-						
+
     // Run as attached or logging						
     if (USB_BUS_SENSE)						
     {						
@@ -237,18 +237,18 @@ for (i = 0; i < 5 * 3; i++) { LED_SET(LED_RED); DelayMs(111); LED_SET(LED_GREEN)
     {						
         RunLogging();       // Run in logging mode, returns when attached						
     }						
-						
-	Reset();                // Reset					
-	return 0;					
+
+Reset();                // Reset					
+return 0;					
 }						
-						
-						
+
+
 // Attached to USB						
 void RunAttached(void)						
 {						
     // Clear the data capture buffer						
     LoggerClear();						
-						
+
     // Initialize the ADXL						
     AccelStartup(settings.sampleRate);						
     //AccelEnableInterrupts(ACCEL_INT_SOURCE_WATERMARK | ACCEL_INT_SOURCE_OVERRUN | ACCEL_INT_SOURCE_DOUBLE_TAP, 0x00);						
@@ -256,28 +256,28 @@ void RunAttached(void)
     GyroStartup();						
     //GyroStartupFifoInterrupts();						
 #endif						
-						
+
 #if 1						
 FtlFlush(0);    // [dgj] Possible fix for 'format disk' bug						
 #endif						
     CLOCK_PLL();	// HS PLL clock for the USB module 12MIPS					
     DelayMs(2); 	// Allow PLL to stabilise					
-						
+
     fsftlUsbDiskMounted = status.diskMounted;						
 #if 1						
 FSInit();       // [dgj] Possible fix for 'format disk' bug						
 #endif						
     MDD_MediaInitialize();  // MDD initialize						
-						
+
     USBInitializeSystem(); 	// Initializes buffer, USB module SFRs and firmware					
     #ifdef USB_INTERRUPT						
     USBDeviceAttach();						
     #endif						
-						
+
     while (USB_BUS_SENSE && restart != 1)						
     {						
         fsftlUsbDiskMounted = status.diskMounted;						
-						
+
         // Check bus status and service USB interrupts.						
         #ifndef USB_INTERRUPT						
         USBDeviceTasks(); 	// Interrupt or polling method.  If using polling, must call					
@@ -291,7 +291,7 @@ FSInit();       // [dgj] Possible fix for 'format disk' bug
                 status.stream = 0;                  // Disable streaming						
                 SettingsCommand(line, SETTINGS_USB);						
             }						
-						
+
             // Stream accelerometer data						
             if (status.stream)						
             {						
@@ -304,7 +304,7 @@ FSInit();       // [dgj] Possible fix for 'format disk' bug
                     accel_t accelSample;						
                     lastSampleTicks += STREAM_INTERVAL;						
                     if (now - lastSampleTicks > 2 * STREAM_INTERVAL) { lastSampleTicks = now; } // not keeping up with sample rate						
-						
+
                     AccelSingleSample(&accelSample);						
 #ifdef USE_GYRO						
                     if (gyroPresent)						
@@ -320,7 +320,7 @@ FSInit();       // [dgj] Possible fix for 'format disk' bug
                     }						
                     USBCDCWait();						
                 }						
-						
+
             }						
         }						
         else						
@@ -329,24 +329,24 @@ FSInit();       // [dgj] Possible fix for 'format disk' bug
         }						
         LedTasks();						
         TimedTasks();						
-						
-						
+
+
         // Experiment to see if this improves speed -- it doesn't seem to						
         #ifdef FSFTL_READ_PREFETCH						
-		FsFtlPrefetch();				
+FsFtlPrefetch();				
         #endif						
     }						
-	#if defined(USB_INTERRUPT)					
+#if defined(USB_INTERRUPT)					
     USBDeviceDetach();						
-	#endif					
+#endif					
     status.attached = -1;						
-						
+
     // Shutdown the FTL						
     FtlShutdown();						
     return;						
 }						
-						
-						
+
+
 // Timed tasks						
 void TimedTasks(void)						
 {						
@@ -354,7 +354,7 @@ void TimedTasks(void)
     if (lastTime != rtcTicksSeconds)						
     {						
         lastTime = rtcTicksSeconds;						
-						
+
         // Increment timer and toggle bit on overflow						
         inactive = FtlIncrementInactivity();						
         AdcSampleNow();						
@@ -370,11 +370,11 @@ void TimedTasks(void)
                 }						
             }						
         }						
-						
+
         {						
             FtlFlush(1);	// Inactivity time out on scratch hold					
         }						
-						
+
         {						
             status.actionCountdown--;						
             {						
@@ -384,22 +384,22 @@ void TimedTasks(void)
                 }						
             }						
         }						
-						
+
         // Reset SW-WDT						
         RtcSwwdtReset();						
     }						
     return;						
 }						
-						
-						
+
+
 // Led status while attached						
 void LedTasks(void)						
 {						
     static unsigned int LEDTimer;						
     static BOOL LEDtoggle;						
 //    static unsigned short inactive = 0;						
-						
-						
+
+
     {						
         if (status.actionCountdown)						
         {						
@@ -411,7 +411,7 @@ void LedTasks(void)
         else						
         {						
             char c0, c1;						
-						
+
             {						
                 if (status.batteryFull >= BATT_FULL_INTERVAL) { c0 = LED_OFF; c1 = LED_WHITE; }       // full - flushed						
                 else                    { c0 = LED_OFF; c1 = LED_YELLOW; }      // charging - flushed						
@@ -431,48 +431,48 @@ void LedTasks(void)
     }						
     return;						
 }						
-						
-						
+
+
 // Stop logging conditions (values seen in log entries)						
 typedef enum						
 { 						
-	STOP_NONE                   = 0,    // (not seen)					
-	STOP_INTERVAL               = 1,    // Blue 0 ..					
-	STOP_SAMPLE_LIMIT           = 2,    // Blue 1 -.-.					
-	STOP_DISK_FULL              = 2,    // Blue 1 -.-. (same as sample limit)					
-	NOT_STARTED_NO_INTERVAL     = 3,    // Blue 2 --.--.					
-	NOT_STARTED_AFTER_INTERVAL  = 4,    // Blue 3 ---.---.					
-	NOT_STARTED_SAMPLE_LIMIT    = 5,    // Blue 4 ----.----.					
-	NOT_STARTED_DISK_FULL       = 5,    // Blue 4 ----.----. (same as sample limit)					
-	NOT_STARTED_WAIT_USB        = 6,    // (not seen)					
-	STOP_USB                    = 7,    // (not seen)					
-	NOT_STARTED_INITIAL_BATTERY = 8,    // Red 0 ..					
-	NOT_STARTED_WAIT_BATTERY    = 9,    // Red 1 -.-.					
-	STOP_BATTERY                = 10,   // Red 2 --.--.					
-	NOT_STARTED_FILE_OPEN       = 11,   // Red 3 ---.---.					
-	STOP_LOGGING_WRITE_ERR      = 12,   // Red 4 ----.----. (not seen, restarted)					
-	STOP_LOGGING_SAMPLE_ERR     = 13,   // Red 5 -----.-----. (not seen, restarted)					
+STOP_NONE                   = 0,    // (not seen)					
+STOP_INTERVAL               = 1,    // Blue 0 ..					
+STOP_SAMPLE_LIMIT           = 2,    // Blue 1 -.-.					
+STOP_DISK_FULL              = 2,    // Blue 1 -.-. (same as sample limit)					
+NOT_STARTED_NO_INTERVAL     = 3,    // Blue 2 --.--.					
+NOT_STARTED_AFTER_INTERVAL  = 4,    // Blue 3 ---.---.					
+NOT_STARTED_SAMPLE_LIMIT    = 5,    // Blue 4 ----.----.					
+NOT_STARTED_DISK_FULL       = 5,    // Blue 4 ----.----. (same as sample limit)					
+NOT_STARTED_WAIT_USB        = 6,    // (not seen)					
+STOP_USB                    = 7,    // (not seen)					
+NOT_STARTED_INITIAL_BATTERY = 8,    // Red 0 ..					
+NOT_STARTED_WAIT_BATTERY    = 9,    // Red 1 -.-.					
+STOP_BATTERY                = 10,   // Red 2 --.--.					
+NOT_STARTED_FILE_OPEN       = 11,   // Red 3 ---.---.					
+STOP_LOGGING_WRITE_ERR      = 12,   // Red 4 ----.----. (not seen, restarted)					
+STOP_LOGGING_SAMPLE_ERR     = 13,   // Red 5 -----.-----. (not seen, restarted)					
 } StopCondition;						
-						
+
 // Log entry strings						
 const char *stopConditionString[] =						
 {						
-	STOP_NONE,                   // 0					
-	STOP_INTERVAL,               // 1					
-	STOP_SAMPLE_LIMIT,           // 2 (or STOP_DISK_FULL)					
-	NOT_STARTED_NO_INTERVAL,     // 3					
-	NOT_STARTED_AFTER_INTERVAL,  // 4					
-	NOT_STARTED_SAMPLE_LIMIT,    // 5 (or NOT_STARTED_DISK_FULL)					
-	NOT_STARTED_WAIT_USB,        // 6					
-	STOP_USB,                    // 7					
-	NOT_STARTED_INITIAL_BATTERY, // 8					
-	NOT_STARTED_WAIT_BATTERY,    // 9					
-	STOP_BATTERY,                // 10					
-	NOT_STARTED_FILE_OPEN,       // 11					
-	STOP_LOGGING_WRITE_ERR,      // 12					
-	STOP_LOGGING_SAMPLE_ERR,     // 13					
+STOP_NONE,                   // 0					
+STOP_INTERVAL,               // 1					
+STOP_SAMPLE_LIMIT,           // 2 (or STOP_DISK_FULL)					
+NOT_STARTED_NO_INTERVAL,     // 3					
+NOT_STARTED_AFTER_INTERVAL,  // 4					
+NOT_STARTED_SAMPLE_LIMIT,    // 5 (or NOT_STARTED_DISK_FULL)					
+NOT_STARTED_WAIT_USB,        // 6					
+STOP_USB,                    // 7					
+NOT_STARTED_INITIAL_BATTERY, // 8					
+NOT_STARTED_WAIT_BATTERY,    // 9					
+STOP_BATTERY,                // 10					
+NOT_STARTED_FILE_OPEN,       // 11					
+STOP_LOGGING_WRITE_ERR,      // 12					
+STOP_LOGGING_SAMPLE_ERR,     // 13					
 };						
-						
+
 // Flash codes						
 const char stopFlashCode[] =						
 {						
@@ -480,19 +480,19 @@ const char stopFlashCode[] =
 //   off,  B:0,  B:1,  B:2,  B:3,  B:4,  B:5,  B:6,  R:0,  R:1,  R:2,  R:3,  R:4,  R:5						
     0x00, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x40, 0x41, 0x42, 0x43, 0x44, 0x45						
 };						
-						
-						
+
+
 // Logging mode						
 void RunLogging(void)						
 {						
     const char *filename = DEFAULT_FILE;						
     StopCondition stopCondition = 0;						
-						
+
     AdcInit();						
     AdcSampleWait();						
-						
+
     SettingsIncrementLogValue(LOG_VALUE_RESTART);   // Increment restart counter						
-						
+
     if (adcResult.batt < BATT_CHARGE_MIN_SAFE)						
     {						
         // Battery level insufficient to start logging -- error						
@@ -518,44 +518,44 @@ void RunLogging(void)
             while (restart != 1 && !stopCondition)						
             {						
                 unsigned int i;						
-						
+
                 // Reset SW-WDT						
                 RtcSwwdtReset();						
-						
+
                 // Don't always perform the battery amd RTC checks						
                 for (i = 0; i < 5; i++)						
                 {						
                     // Exit condition: USB connection						
                     if (USB_BUS_SENSE) { stopCondition = NOT_STARTED_WAIT_USB; restart = 1; break; }						
-						
+
                     LED_SET(LED_OFF);						
-						
+
                     SystemPwrSave(WAKE_ON_WDT|WAKE_ON_USB|DONT_RESTORE_PERIPHERALS|ADC_POWER_DOWN|LOWER_PWR_SLOWER_WAKE|SAVE_INT_STATUS|ALLOW_VECTOR_ON_WAKE);						
                 }						
                 if (stopCondition) { break; }						
-						
+
                 //Delay10us(10);						
                 AdcInit();						
                 AdcSampleNow();						
-						
+
                 // Exit condition: Battery too low						
                 if (adcResult.batt < BATT_CHARGE_MIN_SAFE) { stopCondition = NOT_STARTED_WAIT_BATTERY; break; }						
-						
+
                 // Exit condition: Start logging						
                 if (RtcNow() >= settings.loggingStartTime) { break; }						
             }						
             LED_SET(LED_OFF);						
         }						
-						
+
         // If battery not too low and USB not connected, start logging (we are after any delayed start time)						
         if (restart != 1 && !stopCondition)						
         {						
             {						
-	            stopCondition = NOT_STARTED_DISK_FULL;					
+            stopCondition = NOT_STARTED_DISK_FULL;					
             }						
             else if (!LoggerStart(filename))						
             {						
-	            stopCondition = NOT_STARTED_FILE_OPEN;					
+            stopCondition = NOT_STARTED_FILE_OPEN;					
             }						
             else						
             {						
@@ -567,68 +567,68 @@ void RunLogging(void)
                 else						
                 {						
                     int failCounter = 0;						
-						
+
 #ifdef HIGH_SPEED_USES_PLL						
 #warning "HIGH_SPEED_USES_PLL not fully tested."						
-					// [High-speed] If sampling at high rate, switch to PLL	
-					char isHighSpeed = 0;	
+// [High-speed] If sampling at high rate, switch to PLL	
+char isHighSpeed = 0;	
 #endif						
-						
-	                // Clear the data capture buffer					
-	                LoggerClear();					
-						
-	                // Initialize the ADXL and enable ADXL interrupts					
-	                AccelStartup(settings.sampleRate);					
-	                AccelEnableInterrupts(ACCEL_INT_SOURCE_WATERMARK | ACCEL_INT_SOURCE_OVERRUN, 0x00);	/* ACCEL_INT_SOURCE_DOUBLE_TAP removed */				
+
+                // Clear the data capture buffer					
+                LoggerClear();					
+
+                // Initialize the ADXL and enable ADXL interrupts					
+                AccelStartup(settings.sampleRate);					
+                AccelEnableInterrupts(ACCEL_INT_SOURCE_WATERMARK | ACCEL_INT_SOURCE_OVERRUN, 0x00);	/* ACCEL_INT_SOURCE_DOUBLE_TAP removed */				
 #ifdef USE_GYRO						
                     GyroStartupFifoInterrupts();						
 #endif						
-						
-	                // Logging loop					
-	                while (restart != 1 && !stopCondition)					
-	                {					
-	                    unsigned short now;					
+
+                // Logging loop					
+                while (restart != 1 && !stopCondition)					
+                {					
+                    unsigned short now;					
                         short result;						
-						
-	                    // Exit condition: USB connection					
-	                    if (USB_BUS_SENSE) { stopCondition = STOP_USB; restart = 1; break; }					
-						
-	                    // Get current time					
-	                    now = RtcSeconds();					
-						
-	                    // Write sector (if enough data)					
+
+                    // Exit condition: USB connection					
+                    if (USB_BUS_SENSE) { stopCondition = STOP_USB; restart = 1; break; }					
+
+                    // Get current time					
+                    now = RtcSeconds();					
+
+                    // Write sector (if enough data)					
                         result = LoggerWrite();						
-	                    if (result)					
-	                    {					
+                    if (result)					
+                    {					
                             // We successfully sampled						
                             status.lastSampledTicks = now;						
-						
+
                             // We successfully wrote something, update 'last written' status						
                             {						
                                 status.lastWrittenTicks = now;						
-						
+
                                 // Reset SW-WDT						
                                 RtcSwwdtReset();						
                             }						
-						
-	                        // Check if battery too low...					
-	                        AdcInit(); AdcSampleNow(); // (ADC was just updated by logger anyway)					
-	                        if (adcResult.batt < BATT_CHARGE_MIN_SAFE)					
-	                        {					
-	                            // Get a second opinion to be certain and, if so, stop logging					
-	                            AdcInit(); AdcSampleNow();					
-	                            if (adcResult.batt < BATT_CHARGE_MIN_SAFE) { stopCondition = STOP_BATTERY; break; }					
-	                        }					
-						
-	                        // If written required number of samples, stop logging					
-	                        if (settings.maximumSamples != 0 && status.sampleCount >= settings.maximumSamples) { stopCondition = STOP_SAMPLE_LIMIT; break; }					
-						
-	                        // If after logging end time, stop logging					
-	                        if (RtcNow() > settings.loggingEndTime) { stopCondition = STOP_INTERVAL; break; }					
-	                    }					
-						
-	                    // Status monitor					
-						
+
+                        // Check if battery too low...					
+                        AdcInit(); AdcSampleNow(); // (ADC was just updated by logger anyway)					
+                        if (adcResult.batt < BATT_CHARGE_MIN_SAFE)					
+                        {					
+                            // Get a second opinion to be certain and, if so, stop logging					
+                            AdcInit(); AdcSampleNow();					
+                            if (adcResult.batt < BATT_CHARGE_MIN_SAFE) { stopCondition = STOP_BATTERY; break; }					
+                        }					
+
+                        // If written required number of samples, stop logging					
+                        if (settings.maximumSamples != 0 && status.sampleCount >= settings.maximumSamples) { stopCondition = STOP_SAMPLE_LIMIT; break; }					
+
+                        // If after logging end time, stop logging					
+                        if (RtcNow() > settings.loggingEndTime) { stopCondition = STOP_INTERVAL; break; }					
+                    }					
+
+                    // Status monitor					
+
                         if (now - status.lastSampledTicks > 15)						
                         {						
                             // If not been sampled enough for a sector for 15 seconds, there's an ADXL problem, log the error and restart						
@@ -656,43 +656,43 @@ void RunLogging(void)
                             }						
                         }						
                         else { failCounter = 0; }						
-						
+
 #ifdef HIGH_SPEED_USES_PLL						
 // [High-speed] No sleep if sampling at high rate						
 if (!isHighSpeed)						
 {						
 #endif						
-						
-	                    // Sleep until ADXL INT1, RTC, USB or WDT					
+
+                    // Sleep until ADXL INT1, RTC, USB or WDT					
 #ifdef USE_GYRO						
-	                    SystemPwrSave(WAKE_ON_RTC|WAKE_ON_WDT|WAKE_ON_USB|WAKE_ON_ADXL1|WAKE_ON_GYRO2|WAKE_ON_TIMER1|ADC_POWER_DOWN|LOWER_PWR_SLOWER_WAKE|SAVE_INT_STATUS|ALLOW_VECTOR_ON_WAKE);					
+                    SystemPwrSave(WAKE_ON_RTC|WAKE_ON_WDT|WAKE_ON_USB|WAKE_ON_ADXL1|WAKE_ON_GYRO2|WAKE_ON_TIMER1|ADC_POWER_DOWN|LOWER_PWR_SLOWER_WAKE|SAVE_INT_STATUS|ALLOW_VECTOR_ON_WAKE);					
 #else						
-	                    SystemPwrSave(WAKE_ON_RTC|WAKE_ON_WDT|WAKE_ON_USB|WAKE_ON_ADXL1|WAKE_ON_TIMER1|ADC_POWER_DOWN|LOWER_PWR_SLOWER_WAKE|SAVE_INT_STATUS|ALLOW_VECTOR_ON_WAKE);					
+                    SystemPwrSave(WAKE_ON_RTC|WAKE_ON_WDT|WAKE_ON_USB|WAKE_ON_ADXL1|WAKE_ON_TIMER1|ADC_POWER_DOWN|LOWER_PWR_SLOWER_WAKE|SAVE_INT_STATUS|ALLOW_VECTOR_ON_WAKE);					
 #endif						
-	                    //Sleep();					
-	                    //__builtin_nop();					
+                    //Sleep();					
+                    //__builtin_nop();					
 #ifdef HIGH_SPEED_USES_PLL						
 }						
 #endif						
-	                    					
-	                    					
-	                }					
-						
+                    					
+                    					
+                }					
+
 #ifdef HIGH_SPEED_USES_PLL						
-					// [High-speed] Lower clock rate	
-					if (isHighSpeed) { CLOCK_INTOSC();}	
+// [High-speed] Lower clock rate	
+if (isHighSpeed) { CLOCK_INTOSC();}	
 #endif						
-						
-				}		
-						
+
+}		
+
                 LoggerStop();						
             }						
         }						
     }						
-						
+
     // Blue while powering down (lowest power)						
     LED_SET(LED_BLUE);						
-						
+
     // Shutdown peripherals						
     AccelStandby();						
 #ifdef USE_GYRO						
@@ -700,13 +700,13 @@ if (!isHighSpeed)
 #endif						
     RtcInterruptOff();						
     FtlShutdown();						
-						
+
     // Add log entry for stop reason						
     SettingsAddLogEntry(LOG_CATEGORY_STOP | (unsigned int)stopCondition, RtcNow(), stopConditionString[stopCondition]);						
-						
+
     // Turn off LEDs						
     LED_SET(LED_OFF);						
-						
+
     // Sleep if not connected (and not restarting)						
     {						
         unsigned char led, countReset, countdown;						
@@ -720,14 +720,14 @@ if (!isHighSpeed)
         while (restart != 1)						
         {						
             if (USB_BUS_SENSE) { restart = 1; break; }						
-						
+
             // Reset SW-WDT						
             RtcSwwdtReset();						
-						
+
 // NOTE: RTC interrupts are now off, this assumes a WDT interval of 1 second.						
             SystemPwrSave(WAKE_ON_WDT|LOWER_PWR_SLOWER_WAKE|WAKE_ON_USB|ADC_POWER_DOWN|ACCEL_POWER_DOWN|GYRO_POWER_DOWN|SAVE_INT_STATUS|ALLOW_VECTOR_ON_WAKE);						
             //SystemPwrSave(WAKE_ON_WDT|WAKE_ON_BUTTON|WAKE_ON_USB|DONT_RESTORE_PERIPHERALS|ADC_POWER_DOWN|ACCEL_POWER_DOWN|GYRO_POWER_DOWN|LOWER_PWR_SLOWER_WAKE|SAVE_INT_STATUS);						
-						
+
             {						
                 LED_SET(led);						
                 {						
@@ -743,7 +743,7 @@ if (!isHighSpeed)
             }						
         }						
     }						
-						
+
     return;						
 /*
  * user_main.c
@@ -778,8 +778,8 @@ if (!isHighSpeed)
 #include <ets_forward.h>
 
 typedef struct {
-	unsigned int magic;
-	unsigned int resetCounter;
+unsigned int magic;
+unsigned int resetCounter;
 } RESET_COUNTER;
 #define RESET_COUNTER_MAGIC 0x12345678
 #define RESET_COUNTER_RTC_ADDRESS 64
@@ -789,34 +789,34 @@ LOCAL os_timer_t mResetTimer;
 LOCAL unsigned int mSpecialMode = 0;
 
 uint32 ICACHE_FLASH_ATTR user_rf_cal_sector_set(void) {
-	enum flash_size_map size_map = system_get_flash_size_map();
-	uint32 rf_cal_sec = 0;
+enum flash_size_map size_map = system_get_flash_size_map();
+uint32 rf_cal_sec = 0;
 
-	switch (size_map) {
-	case FLASH_SIZE_4M_MAP_256_256:
-		rf_cal_sec = 128 - 8;
-		break;
+switch (size_map) {
+case FLASH_SIZE_4M_MAP_256_256:
+rf_cal_sec = 128 - 8;
+break;
 
-	case FLASH_SIZE_8M_MAP_512_512:
-		rf_cal_sec = 256 - 5;
-		break;
+case FLASH_SIZE_8M_MAP_512_512:
+rf_cal_sec = 256 - 5;
+break;
 
-	case FLASH_SIZE_16M_MAP_512_512:
-	case FLASH_SIZE_16M_MAP_1024_1024:
-		rf_cal_sec = 512 - 5;
-		break;
+case FLASH_SIZE_16M_MAP_512_512:
+case FLASH_SIZE_16M_MAP_1024_1024:
+rf_cal_sec = 512 - 5;
+break;
 
-	case FLASH_SIZE_32M_MAP_512_512:
-	case FLASH_SIZE_32M_MAP_1024_1024:
-		rf_cal_sec = 1024 - 5;
-		break;
+case FLASH_SIZE_32M_MAP_512_512:
+case FLASH_SIZE_32M_MAP_1024_1024:
+rf_cal_sec = 1024 - 5;
+break;
 
-	default:
-		rf_cal_sec = 0;
-		break;
-	}
+default:
+rf_cal_sec = 0;
+break;
+}
 
-	return rf_cal_sec;
+return rf_cal_sec;
 }
 
 //void user_pre_init(void) {
@@ -840,76 +840,76 @@ uint32 ICACHE_FLASH_ATTR user_rf_cal_sector_set(void) {
 //}
 
 LOCAL void ICACHE_FLASH_ATTR reset_counter(void *arg) {
-	RESET_COUNTER counter;
-	counter.magic = RESET_COUNTER_MAGIC;
-	counter.resetCounter = 0;
-	system_rtc_mem_write(RESET_COUNTER_RTC_ADDRESS, &counter, sizeof(counter));
+RESET_COUNTER counter;
+counter.magic = RESET_COUNTER_MAGIC;
+counter.resetCounter = 0;
+system_rtc_mem_write(RESET_COUNTER_RTC_ADDRESS, &counter, sizeof(counter));
 }
 
 extern int rtc_mem_check(int f);
 
 void user_rf_pre_init(void) {
-	RESET_COUNTER counter;
-	if(system_get_rst_info()->reason != REASON_EXT_SYS_RST) {
-		reset_counter(0);
-	} else {
-		system_rtc_mem_read(64, &counter, sizeof(counter));
-		if(counter.magic == RESET_COUNTER_MAGIC && counter.resetCounter <= RESET_NUM) {
-			counter.resetCounter++;
-			if(counter.resetCounter == RESET_NUM) {
-				reset_counter(0);
-				mSpecialMode = 1;
-			} else {
-				system_rtc_mem_write(RESET_COUNTER_RTC_ADDRESS, &counter, sizeof(counter));
-				os_timer_disarm(&mResetTimer);
-				os_timer_setfn(&mResetTimer, (os_timer_func_t *)reset_counter, NULL);
-				os_timer_arm(&mResetTimer, 1000, 0);
-			}
-		} else {
-			reset_counter(0);
-		}
-	}
+RESET_COUNTER counter;
+if(system_get_rst_info()->reason != REASON_EXT_SYS_RST) {
+reset_counter(0);
+} else {
+system_rtc_mem_read(64, &counter, sizeof(counter));
+if(counter.magic == RESET_COUNTER_MAGIC && counter.resetCounter <= RESET_NUM) {
+counter.resetCounter++;
+if(counter.resetCounter == RESET_NUM) {
+reset_counter(0);
+mSpecialMode = 1;
+} else {
+system_rtc_mem_write(RESET_COUNTER_RTC_ADDRESS, &counter, sizeof(counter));
+os_timer_disarm(&mResetTimer);
+os_timer_setfn(&mResetTimer, (os_timer_func_t *)reset_counter, NULL);
+os_timer_arm(&mResetTimer, 1000, 0);
+}
+} else {
+reset_counter(0);
+}
+}
 
-	system_restore();
-	rtc_mem_check(0);
+system_restore();
+rtc_mem_check(0);
 }
 
 void ICACHE_FLASH_ATTR system_init_done(void) {
-	if(dhsettings_get_wifi_mode() == WIFI_MODE_AP &&
-			dhsettings_get_devicehive_deviceid()[0] &&
-			mSpecialMode == 0) {
-		mdnsd_start(dhsettings_get_devicehive_deviceid(), dhap_get_ip_info()->ip.addr);
-	}
-	dhdebug("Initialization completed");
+if(dhsettings_get_wifi_mode() == WIFI_MODE_AP &&
+dhsettings_get_devicehive_deviceid()[0] &&
+mSpecialMode == 0) {
+mdnsd_start(dhsettings_get_devicehive_deviceid(), dhap_get_ip_info()->ip.addr);
+}
+dhdebug("Initialization completed");
 }
 
 void user_init(void) {
-	int ever_saved;
-	gpio_output_set(0, 0, 0, DH_GPIO_SUITABLE_PINS);
-	dhsettings_init(&ever_saved);
-		uploadable_page_delete();
-		mSpecialMode = 1;
-	}
-	dhdebug("*****************************");
-	if(mSpecialMode) { // if special mode was called by user or if there is no settings
-		dh_uart_leds(DH_UART_LEDS_ON);
-		dhdebug("Wi-Fi Zero Configuration Mode");
-		dhap_init(WIFI_CONFIGURATION_SSID, NULL);
-		dhzc_dnsd_init();
-		dhzc_web_init();
-		dhdebug("Zero configuration server is initialized");
-	} else {
-		if(dhsettings_get_wifi_mode() == WIFI_MODE_CLIENT) {
-			dhsender_queue_init();
-			dhconnector_init();
-			dh_gpio_init();
-		} else if(dhsettings_get_wifi_mode() == WIFI_MODE_AP) {
-			dhap_init(dhsettings_get_wifi_ssid(), dhsettings_get_wifi_password());
-		}
-		webserver_init();
-	}
-	system_init_done_cb(system_init_done);
-	dhterminal_init();
+int ever_saved;
+gpio_output_set(0, 0, 0, DH_GPIO_SUITABLE_PINS);
+dhsettings_init(&ever_saved);
+uploadable_page_delete();
+mSpecialMode = 1;
+}
+dhdebug("*****************************");
+if(mSpecialMode) { // if special mode was called by user or if there is no settings
+dh_uart_leds(DH_UART_LEDS_ON);
+dhdebug("Wi-Fi Zero Configuration Mode");
+dhap_init(WIFI_CONFIGURATION_SSID, NULL);
+dhzc_dnsd_init();
+dhzc_web_init();
+dhdebug("Zero configuration server is initialized");
+} else {
+if(dhsettings_get_wifi_mode() == WIFI_MODE_CLIENT) {
+dhsender_queue_init();
+dhconnector_init();
+dh_gpio_init();
+} else if(dhsettings_get_wifi_mode() == WIFI_MODE_AP) {
+dhap_init(dhsettings_get_wifi_ssid(), dhsettings_get_wifi_password());
+}
+webserver_init();
+}
+system_init_done_cb(system_init_done);
+dhterminal_init();
 /*
  * File      : i2c_core.c
  * This file is part of RT-Thread RTOS
@@ -1193,22 +1193,22 @@ static uint8_t nv_storage_tweak_key[16];
   */
 static void doubleInGF(uint8_t *op1)
 {
-	uint8_t i;
-	uint8_t last_bit;
-	uint8_t temp;
+uint8_t i;
+uint8_t last_bit;
+uint8_t temp;
 
-	last_bit = 0;
-	for (i = 0; i < 16; i++)
-	{
-		temp = (uint8_t)(op1[i] & 0x80);
-		op1[i] = (uint8_t)(op1[i] << 1);
-		op1[i] |= last_bit;
-		last_bit = (uint8_t)(temp >> 7);
-	}
-	last_bit = (uint8_t)(-(int)last_bit);
-	// last_bit is now 0 if most-significant bit is 0, 0xff if most-significant
-	// bit is 1.
-	op1[0] = (uint8_t)(op1[0] ^ (0x87 & last_bit));
+last_bit = 0;
+for (i = 0; i < 16; i++)
+{
+temp = (uint8_t)(op1[i] & 0x80);
+op1[i] = (uint8_t)(op1[i] << 1);
+op1[i] |= last_bit;
+last_bit = (uint8_t)(temp >> 7);
+}
+last_bit = (uint8_t)(-(int)last_bit);
+// last_bit is now 0 if most-significant bit is 0, 0xff if most-significant
+// bit is 1.
+op1[0] = (uint8_t)(op1[0] ^ (0x87 & last_bit));
 }
 
 /** Combined XEX mode encrypt/decrypt, since they're almost the same.
@@ -1226,29 +1226,29 @@ static void doubleInGF(uint8_t *op1)
   */
 static void xexEnDecrypt(uint8_t *out, uint8_t *in, uint8_t *n, uint8_t seq, uint8_t *tweak_key, uint8_t *encrypt_key, bool is_decrypt)
 {
-	uint8_t expanded_key[EXPANDED_KEY_SIZE];
-	uint8_t delta[16];
-	uint8_t buffer[16];
-	uint8_t i;
+uint8_t expanded_key[EXPANDED_KEY_SIZE];
+uint8_t delta[16];
+uint8_t buffer[16];
+uint8_t i;
 
-	aesExpandKey(expanded_key, tweak_key);
-	aesEncrypt(delta, n, expanded_key);
-	for (i = 0; i < seq; i++)
-	{
-		doubleInGF(delta);
-	}
-	memcpy(buffer, in, 16);
-	xor16Bytes(buffer, delta);
-	aesExpandKey(expanded_key, encrypt_key);
-	if (is_decrypt)
-	{
-		aesDecrypt(out, buffer, expanded_key);
-	}
-	else
-	{
-		aesEncrypt(out, buffer, expanded_key);
-	}
-	xor16Bytes(out, delta);
+aesExpandKey(expanded_key, tweak_key);
+aesEncrypt(delta, n, expanded_key);
+for (i = 0; i < seq; i++)
+{
+doubleInGF(delta);
+}
+memcpy(buffer, in, 16);
+xor16Bytes(buffer, delta);
+aesExpandKey(expanded_key, encrypt_key);
+if (is_decrypt)
+{
+aesDecrypt(out, buffer, expanded_key);
+}
+else
+{
+aesEncrypt(out, buffer, expanded_key);
+}
+xor16Bytes(out, delta);
 }
 
 /** Encrypt one 16 byte block using AES in XEX mode. This uses an arbitrary
@@ -1274,7 +1274,7 @@ static void xexEnDecrypt(uint8_t *out, uint8_t *in, uint8_t *n, uint8_t seq, uin
   */
 static void xexEncryptInternal(uint8_t *out, uint8_t *in, uint8_t *n, uint8_t seq, uint8_t *tweak_key, uint8_t *encrypt_key)
 {
-	xexEnDecrypt(out, in, n, seq, tweak_key, encrypt_key, false);
+xexEnDecrypt(out, in, n, seq, tweak_key, encrypt_key, false);
 }
 
 /** Decrypt the 16 byte block using AES in XEX mode. This uses an arbitrary
@@ -1290,7 +1290,7 @@ static void xexEncryptInternal(uint8_t *out, uint8_t *in, uint8_t *n, uint8_t se
   */
 static void xexDecryptInternal(uint8_t *out, uint8_t *in, uint8_t *n, uint8_t seq, uint8_t *tweak_key, uint8_t *encrypt_key)
 {
-	xexEnDecrypt(out, in, n, seq, tweak_key, encrypt_key, true);
+xexEnDecrypt(out, in, n, seq, tweak_key, encrypt_key, true);
 }
 
 /** Encrypt one 16 byte block using AES in XEX mode. This uses the encryption
@@ -1304,7 +1304,7 @@ static void xexDecryptInternal(uint8_t *out, uint8_t *in, uint8_t *n, uint8_t se
   */
 void xexEncrypt(uint8_t *out, uint8_t *in, uint8_t *n, uint8_t seq)
 {
-	xexEncryptInternal(out, in, n, seq, nv_storage_tweak_key, nv_storage_encrypt_key);
+xexEncryptInternal(out, in, n, seq, nv_storage_tweak_key, nv_storage_encrypt_key);
 }
 
 /** Decrypt the 16 byte block using AES in XEX mode. This uses the encryption
@@ -1318,7 +1318,7 @@ void xexEncrypt(uint8_t *out, uint8_t *in, uint8_t *n, uint8_t seq)
   */
 void xexDecrypt(uint8_t *out, uint8_t *in, uint8_t *n, uint8_t seq)
 {
-	xexDecryptInternal(out, in, n, seq, nv_storage_tweak_key, nv_storage_encrypt_key);
+xexDecryptInternal(out, in, n, seq, nv_storage_tweak_key, nv_storage_encrypt_key);
 }
 
 /** Set the combined encryption key.
@@ -1329,8 +1329,8 @@ void xexDecrypt(uint8_t *out, uint8_t *in, uint8_t *n, uint8_t seq)
   */
 void setEncryptionKey(const uint8_t *in)
 {
-	memcpy(nv_storage_encrypt_key, in, 16);
-	memcpy(nv_storage_tweak_key, &(in[16]), 16);
+memcpy(nv_storage_encrypt_key, in, 16);
+memcpy(nv_storage_tweak_key, &(in[16]), 16);
 }
 
 /** Get the combined encryption key.
@@ -1340,8 +1340,8 @@ void setEncryptionKey(const uint8_t *in)
   */
 void getEncryptionKey(uint8_t *out)
 {
-	memcpy(out, nv_storage_encrypt_key, 16);
-	memcpy(&(out[16]), nv_storage_tweak_key, 16);
+memcpy(out, nv_storage_encrypt_key, 16);
+memcpy(&(out[16]), nv_storage_tweak_key, 16);
 }
 
 /** Check if the current combined encryption key is all zeroes. This has
@@ -1352,22 +1352,22 @@ void getEncryptionKey(uint8_t *out)
   */
 bool isEncryptionKeyNonZero(void)
 {
-	uint8_t r;
-	uint8_t i;
+uint8_t r;
+uint8_t i;
 
-	r = 0;
-	for (i = 0; i < 16; i++)
-	{
-		r |= nv_storage_encrypt_key[i];
-		r |= nv_storage_tweak_key[i];
-	}
-	{
-		return true;
-	}
-	else
-	{
-		return false;
-	}
+r = 0;
+for (i = 0; i < 16; i++)
+{
+r |= nv_storage_encrypt_key[i];
+r |= nv_storage_tweak_key[i];
+}
+{
+return true;
+}
+else
+{
+return false;
+}
 }
 
 /** Clear out memory which stores encryption keys.
@@ -1376,11 +1376,11 @@ bool isEncryptionKeyNonZero(void)
   */
 void clearEncryptionKey(void)
 {
-	// Just to be sure, do two passes.
-	memset(nv_storage_tweak_key, 0xff, 16);
-	memset(nv_storage_encrypt_key, 0xff, 16);
-	memset(nv_storage_tweak_key, 0, 16);
-	memset(nv_storage_encrypt_key, 0, 16);
+// Just to be sure, do two passes.
+memset(nv_storage_tweak_key, 0xff, 16);
+memset(nv_storage_encrypt_key, 0xff, 16);
+memset(nv_storage_tweak_key, 0, 16);
+memset(nv_storage_encrypt_key, 0, 16);
 }
 
 /** Wrapper around nonVolatileWrite() which also encrypts data
@@ -1398,48 +1398,48 @@ void clearEncryptionKey(void)
   */
 NonVolatileReturn encryptedNonVolatileWrite(uint8_t *data, NVPartitions partition, uint32_t address, uint32_t length)
 {
-	uint32_t block_start;
-	uint32_t block_end;
-	uint8_t block_offset;
-	uint8_t ciphertext[16];
-	uint8_t plaintext[16];
-	uint8_t n[16];
-	NonVolatileReturn r;
+uint32_t block_start;
+uint32_t block_end;
+uint8_t block_offset;
+uint8_t ciphertext[16];
+uint8_t plaintext[16];
+uint8_t n[16];
+NonVolatileReturn r;
 
-	block_start = address & 0xfffffff0;
-	block_offset = (uint8_t)(address & 0x0000000f);
-	block_end = (address + length - 1) & 0xfffffff0;
-	if ((address + length) < address)
-	{
-		// Overflow occurred.
-		return NV_INVALID_ADDRESS;
-	}
+block_start = address & 0xfffffff0;
+block_offset = (uint8_t)(address & 0x0000000f);
+block_end = (address + length - 1) & 0xfffffff0;
+if ((address + length) < address)
+{
+// Overflow occurred.
+return NV_INVALID_ADDRESS;
+}
 
-	memset(n, 0, 16);
-	for (; block_start <= block_end; block_start += 16)
-	{
-		r = nonVolatileRead(ciphertext, partition, block_start, 16);
-		if (r != NV_NO_ERROR)
-		{
-			return r;
-		}
-		writeU32LittleEndian(n, block_start);
-		xexDecrypt(plaintext, ciphertext, n, 1);
-		while (length && block_offset < 16)
-		{
-			plaintext[block_offset++] = *data++;
-			length--;
-		}
-		block_offset = 0;
-		xexEncrypt(ciphertext, plaintext, n, 1);
-		r = nonVolatileWrite(ciphertext, partition, block_start, 16);
-		if (r != NV_NO_ERROR)
-		{
-			return r;
-		}
-	}
+memset(n, 0, 16);
+for (; block_start <= block_end; block_start += 16)
+{
+r = nonVolatileRead(ciphertext, partition, block_start, 16);
+if (r != NV_NO_ERROR)
+{
+return r;
+}
+writeU32LittleEndian(n, block_start);
+xexDecrypt(plaintext, ciphertext, n, 1);
+while (length && block_offset < 16)
+{
+plaintext[block_offset++] = *data++;
+length--;
+}
+block_offset = 0;
+xexEncrypt(ciphertext, plaintext, n, 1);
+r = nonVolatileWrite(ciphertext, partition, block_start, 16);
+if (r != NV_NO_ERROR)
+{
+return r;
+}
+}
 
-	return NV_NO_ERROR;
+return NV_NO_ERROR;
 }
 
 /** Wrapper around nonVolatileRead() which also decrypts data
@@ -1455,42 +1455,42 @@ NonVolatileReturn encryptedNonVolatileWrite(uint8_t *data, NVPartitions partitio
   */
 NonVolatileReturn encryptedNonVolatileRead(uint8_t *data, NVPartitions partition, uint32_t address, uint32_t length)
 {
-	uint32_t block_start;
-	uint32_t block_end;
-	uint8_t block_offset;
-	uint8_t ciphertext[16];
-	uint8_t plaintext[16];
-	uint8_t n[16];
-	NonVolatileReturn r;
+uint32_t block_start;
+uint32_t block_end;
+uint8_t block_offset;
+uint8_t ciphertext[16];
+uint8_t plaintext[16];
+uint8_t n[16];
+NonVolatileReturn r;
 
-	block_start = address & 0xfffffff0;
-	block_offset = (uint8_t)(address & 0x0000000f);
-	block_end = (address + length - 1) & 0xfffffff0;
-	if ((address + length) < address)
-	{
-		// Overflow occurred.
-		return NV_INVALID_ADDRESS;
-	}
+block_start = address & 0xfffffff0;
+block_offset = (uint8_t)(address & 0x0000000f);
+block_end = (address + length - 1) & 0xfffffff0;
+if ((address + length) < address)
+{
+// Overflow occurred.
+return NV_INVALID_ADDRESS;
+}
 
-	memset(n, 0, 16);
-	for (; block_start <= block_end; block_start += 16)
-	{
-		r = nonVolatileRead(ciphertext, partition, block_start, 16);
-		if (r != NV_NO_ERROR)
-		{
-			return r;
-		}
-		writeU32LittleEndian(n, block_start);
-		xexDecrypt(plaintext, ciphertext, n, 1);
-		while (length && block_offset < 16)
-		{
-			*data++ = plaintext[block_offset++];
-			length--;
-		}
-		block_offset = 0;
-	}
+memset(n, 0, 16);
+for (; block_start <= block_end; block_start += 16)
+{
+r = nonVolatileRead(ciphertext, partition, block_start, 16);
+if (r != NV_NO_ERROR)
+{
+return r;
+}
+writeU32LittleEndian(n, block_start);
+xexDecrypt(plaintext, ciphertext, n, 1);
+while (length && block_offset < 16)
+{
+*data++ = plaintext[block_offset++];
+length--;
+}
+block_offset = 0;
+}
 
-	return NV_NO_ERROR;
+return NV_NO_ERROR;
 }
 
 #ifdef TEST_XEX
@@ -1507,236 +1507,236 @@ NonVolatileReturn encryptedNonVolatileRead(uint8_t *data, NVPartitions partition
   */
 static void scanTestVectors(char *filename, int is_data_unit_seq_number)
 {
-	FILE *f;
-	int test_number;
-	unsigned int data_unit_length;
-	bool is_encrypt;
-	unsigned int i;
-	int j;
-	int value;
-	bool seen_count;
-	bool test_failed;
-	char buffer[100];
-	uint8_t tweak_key[16];
-	uint8_t encrypt_key[16];
-	uint8_t tweak_value[16];
-	uint8_t *plaintext;
-	uint8_t *ciphertext;
-	uint8_t *compare;
+FILE *f;
+int test_number;
+unsigned int data_unit_length;
+bool is_encrypt;
+unsigned int i;
+int j;
+int value;
+bool seen_count;
+bool test_failed;
+char buffer[100];
+uint8_t tweak_key[16];
+uint8_t encrypt_key[16];
+uint8_t tweak_value[16];
+uint8_t *plaintext;
+uint8_t *ciphertext;
+uint8_t *compare;
 
-	f = fopen(filename, "r");
-	if (f == NULL)
-	{
-		printf("Could not open %s, please get it \
+f = fopen(filename, "r");
+if (f == NULL)
+{
+printf("Could not open %s, please get it \
 (\"AES Known Answer Test (KAT) Vectors\") \
 from http://csrc.nist.gov/groups/STM/cavp/#08\n", filename);
-		printf("There should be two versions: one with 128 bit hex strings as the tweak\n");
-		printf("value, and one with a \"data unit sequence number\" as the tweak value.\n");
-		printf("Rename the one with 128 bit hex string tweak values \"XTSGenAES128i.rsp\"\n");
-		printf("and rename the one with data unit sequence numbers \"XTSGenAES128d.rsp\".\n");
-		exit(1);
-	}
+printf("There should be two versions: one with 128 bit hex strings as the tweak\n");
+printf("value, and one with a \"data unit sequence number\" as the tweak value.\n");
+printf("Rename the one with 128 bit hex string tweak values \"XTSGenAES128i.rsp\"\n");
+printf("and rename the one with data unit sequence numbers \"XTSGenAES128d.rsp\".\n");
+exit(1);
+}
 
-	test_number = 1;
-	for (i = 0; i < 11; i++)
-	{
-		skipLine(f);
-	}
-	is_encrypt = true;
-	while (!feof(f))
-	{
-		// Check for [DECRYPT].
-		skipWhiteSpace(f);
-		seen_count = false;
-		{
-			fgets(buffer, 6, f);
-			skipLine(f);
-			skipWhiteSpace(f);
-			if (!strcmp(buffer, "[DECR"))
-			{
-				is_encrypt = false;
-			}
-			else if (!strcmp(buffer, "COUNT"))
-			{
-				seen_count = true;
-			}
-			else
-			{
-				printf("Expected \"COUNT\" or \"[DECR\"\n");
-				exit(1);
-			}
-		}
+test_number = 1;
+for (i = 0; i < 11; i++)
+{
+skipLine(f);
+}
+is_encrypt = true;
+while (!feof(f))
+{
+// Check for [DECRYPT].
+skipWhiteSpace(f);
+seen_count = false;
+{
+fgets(buffer, 6, f);
+skipLine(f);
+skipWhiteSpace(f);
+if (!strcmp(buffer, "[DECR"))
+{
+is_encrypt = false;
+}
+else if (!strcmp(buffer, "COUNT"))
+{
+seen_count = true;
+}
+else
+{
+printf("Expected \"COUNT\" or \"[DECR\"\n");
+exit(1);
+}
+}
 
-		// Get data length.
-		fgets(buffer, 15, f);
-		if (strcmp(buffer, "DataUnitLen = "))
-		{
-			printf("Parse error; expected \"DataUnitLen = \"\n");
-			exit(1);
-		}
-		fscanf(f, "%u", &data_unit_length);
-		{
-			printf("Error: got absurd data unit length %u\n", data_unit_length);
-			exit(1);
-		}
-		skipWhiteSpace(f);
+// Get data length.
+fgets(buffer, 15, f);
+if (strcmp(buffer, "DataUnitLen = "))
+{
+printf("Parse error; expected \"DataUnitLen = \"\n");
+exit(1);
+}
+fscanf(f, "%u", &data_unit_length);
+{
+printf("Error: got absurd data unit length %u\n", data_unit_length);
+exit(1);
+}
+skipWhiteSpace(f);
 
-		{
-			// Skip tests which require ciphertext stealing, since ciphertext
-			// stealing isn't implemented here (because it's not necessary).
-			for (i = 0; i < 6; i++)
-			{
-				skipLine(f);
-			}
-		}
-		else
-		{
-			data_unit_length >>= 3; // number of bits to number of bytes
+{
+// Skip tests which require ciphertext stealing, since ciphertext
+// stealing isn't implemented here (because it's not necessary).
+for (i = 0; i < 6; i++)
+{
+skipLine(f);
+}
+}
+else
+{
+data_unit_length >>= 3; // number of bits to number of bytes
 
-			// Get key.
-			fgets(buffer, 7, f);
-			if (strcmp(buffer, "Key = "))
-			{
-				printf("Parse error; expected \"Key = \"\n");
-				exit(1);
-			}
-			for (i = 0; i < 16; i++)
-			{
-				fscanf(f, "%02x", &value);
-				encrypt_key[i] = (uint8_t)value;
-			}
-			for (i = 0; i < 16; i++)
-			{
-				fscanf(f, "%02x", &value);
-				tweak_key[i] = (uint8_t)value;
-			}
-			skipWhiteSpace(f);
+// Get key.
+fgets(buffer, 7, f);
+if (strcmp(buffer, "Key = "))
+{
+printf("Parse error; expected \"Key = \"\n");
+exit(1);
+}
+for (i = 0; i < 16; i++)
+{
+fscanf(f, "%02x", &value);
+encrypt_key[i] = (uint8_t)value;
+}
+for (i = 0; i < 16; i++)
+{
+fscanf(f, "%02x", &value);
+tweak_key[i] = (uint8_t)value;
+}
+skipWhiteSpace(f);
 
-			// Get tweak value.
-			if (is_data_unit_seq_number)
-			{
-				int n;
+// Get tweak value.
+if (is_data_unit_seq_number)
+{
+int n;
 
-				fgets(buffer, 21, f);
-				if (strcmp(buffer, "DataUnitSeqNumber = "))
-				{
-					printf("Parse error; expected \"DataUnitSeqNumber = \"\n");
-					exit(1);
-				}
-				fscanf(f, "%d", &n);
-				memset(tweak_value, 0, 16);
-				tweak_value[0] = (uint8_t)n;
-				tweak_value[1] = (uint8_t)(n >> 8);
-				tweak_value[2] = (uint8_t)(n >> 16);
-				tweak_value[3] = (uint8_t)(n >> 24);
-			}
-			else
-			{
-				fgets(buffer, 5, f);
-				if (strcmp(buffer, "i = "))
-				{
-					printf("Parse error; expected \"i = \"\n");
-					exit(1);
-				}
-				for (i = 0; i < 16; i++)
-				{
-					fscanf(f, "%02x", &value);
-					tweak_value[i] = (uint8_t)value;
-				}
-			}
-			skipWhiteSpace(f);
+fgets(buffer, 21, f);
+if (strcmp(buffer, "DataUnitSeqNumber = "))
+{
+printf("Parse error; expected \"DataUnitSeqNumber = \"\n");
+exit(1);
+}
+fscanf(f, "%d", &n);
+memset(tweak_value, 0, 16);
+tweak_value[0] = (uint8_t)n;
+tweak_value[1] = (uint8_t)(n >> 8);
+tweak_value[2] = (uint8_t)(n >> 16);
+tweak_value[3] = (uint8_t)(n >> 24);
+}
+else
+{
+fgets(buffer, 5, f);
+if (strcmp(buffer, "i = "))
+{
+printf("Parse error; expected \"i = \"\n");
+exit(1);
+}
+for (i = 0; i < 16; i++)
+{
+fscanf(f, "%02x", &value);
+tweak_value[i] = (uint8_t)value;
+}
+}
+skipWhiteSpace(f);
 
-			plaintext = malloc(data_unit_length);
-			ciphertext = malloc(data_unit_length);
-			compare = malloc(data_unit_length);
+plaintext = malloc(data_unit_length);
+ciphertext = malloc(data_unit_length);
+compare = malloc(data_unit_length);
 
-			// Get plaintext/ciphertext.
-			// The order is: plaintext, then ciphertext for encrypt.
-			// The order is: ciphertext, then plaintext for decrypt.
-			for (j = 0; j < 2; j++)
-			{
-				if (((is_encrypt) && (j == 0))
-					|| ((!is_encrypt) && (j != 0)))
-				{
-					fgets(buffer, 6, f);
-					if (strcmp(buffer, "PT = "))
-					{
-						printf("Parse error; expected \"PT = \"\n");
-						exit(1);
-					}
-					for (i = 0; i < data_unit_length; i++)
-					{
-						fscanf(f, "%02x", &value);
-						plaintext[i] = (uint8_t)value;
-					}
-				}
-				else
-				{
-					fgets(buffer, 6, f);
-					if (strcmp(buffer, "CT = "))
-					{
-						printf("Parse error; expected \"CT = \"\n");
-						exit(1);
-					}
-					for (i = 0; i < data_unit_length; i++)
-					{
-						fscanf(f, "%02x", &value);
-						ciphertext[i] = (uint8_t)value;
-					}
-				}
-				skipWhiteSpace(f);
-			} // end for (j = 0; j < 2; j++)
+// Get plaintext/ciphertext.
+// The order is: plaintext, then ciphertext for encrypt.
+// The order is: ciphertext, then plaintext for decrypt.
+for (j = 0; j < 2; j++)
+{
+if (((is_encrypt) && (j == 0))
+|| ((!is_encrypt) && (j != 0)))
+{
+fgets(buffer, 6, f);
+if (strcmp(buffer, "PT = "))
+{
+printf("Parse error; expected \"PT = \"\n");
+exit(1);
+}
+for (i = 0; i < data_unit_length; i++)
+{
+fscanf(f, "%02x", &value);
+plaintext[i] = (uint8_t)value;
+}
+}
+else
+{
+fgets(buffer, 6, f);
+if (strcmp(buffer, "CT = "))
+{
+printf("Parse error; expected \"CT = \"\n");
+exit(1);
+}
+for (i = 0; i < data_unit_length; i++)
+{
+fscanf(f, "%02x", &value);
+ciphertext[i] = (uint8_t)value;
+}
+}
+skipWhiteSpace(f);
+} // end for (j = 0; j < 2; j++)
 
-			// Do encryption/decryption and compare
-			test_failed = false;
-			if (is_encrypt)
-			{
-				for (i = 0; i < data_unit_length; i += 16)
-				{
-					xexEncryptInternal(&(compare[i]), &(plaintext[i]), tweak_value, (uint8_t)(i >> 4), tweak_key, encrypt_key);
-					if (memcmp(&(compare[i]), &(ciphertext[i]), 16))
-					{
-						test_failed = true;
-						break;
-					}
-				}
-			}
-			else
-			{
-				for (i = 0; i < data_unit_length; i += 16)
-				{
-					xexDecryptInternal(&(compare[i]), &(ciphertext[i]), tweak_value, (uint8_t)(i >> 4), tweak_key, encrypt_key);
-					if (memcmp(&(compare[i]), &(plaintext[i]), 16))
-					{
-						test_failed = true;
-						break;
-					}
-				}
-			}
-			if (!test_failed)
-			{
-				reportSuccess();
-			}
-			else
-			{
-				printf("Test %d failed\n", test_number);
-				printf("Key: ");
-				printBigEndian16(encrypt_key);
-				printBigEndian16(tweak_key);
-				printf("\nFirst 16 bytes of plaintext: ");
-				printBigEndian16(plaintext);
-				printf("\nFirst 16 bytes of ciphertext: ");
-				printBigEndian16(ciphertext);
-				printf("\n");
-				reportFailure();
-			}
-			test_number++;
-			free(plaintext);
-			free(ciphertext);
-			free(compare);
-		}
-	}
-	fclose(f);
+// Do encryption/decryption and compare
+test_failed = false;
+if (is_encrypt)
+{
+for (i = 0; i < data_unit_length; i += 16)
+{
+xexEncryptInternal(&(compare[i]), &(plaintext[i]), tweak_value, (uint8_t)(i >> 4), tweak_key, encrypt_key);
+if (memcmp(&(compare[i]), &(ciphertext[i]), 16))
+{
+test_failed = true;
+break;
+}
+}
+}
+else
+{
+for (i = 0; i < data_unit_length; i += 16)
+{
+xexDecryptInternal(&(compare[i]), &(ciphertext[i]), tweak_value, (uint8_t)(i >> 4), tweak_key, encrypt_key);
+if (memcmp(&(compare[i]), &(plaintext[i]), 16))
+{
+test_failed = true;
+break;
+}
+}
+}
+if (!test_failed)
+{
+reportSuccess();
+}
+else
+{
+printf("Test %d failed\n", test_number);
+printf("Key: ");
+printBigEndian16(encrypt_key);
+printBigEndian16(tweak_key);
+printf("\nFirst 16 bytes of plaintext: ");
+printBigEndian16(plaintext);
+printf("\nFirst 16 bytes of ciphertext: ");
+printBigEndian16(ciphertext);
+printf("\n");
+reportFailure();
+}
+test_number++;
+free(plaintext);
+free(ciphertext);
+free(compare);
+}
+}
+fclose(f);
 }
 
 /** Maximum address that a write to non-volatile storage will be.
@@ -1747,159 +1747,159 @@ from http://csrc.nist.gov/groups/STM/cavp/#08\n", filename);
 
 int main(void)
 {
-	uint8_t what_storage_should_be[MAX_ADDRESS];
-	uint8_t buffer[512];
-	uint8_t one_key[32];
-	unsigned int i;
-	unsigned int j;
+uint8_t what_storage_should_be[MAX_ADDRESS];
+uint8_t buffer[512];
+uint8_t one_key[32];
+unsigned int i;
+unsigned int j;
 
-	initTests(__FILE__);
+initTests(__FILE__);
 
-	initWalletTest();
-	clearEncryptionKey();
+initWalletTest();
+clearEncryptionKey();
 
-	scanTestVectors("XTSGenAES128i.rsp", 0);
-	scanTestVectors("XTSGenAES128d.rsp", 1);
+scanTestVectors("XTSGenAES128i.rsp", 0);
+scanTestVectors("XTSGenAES128d.rsp", 1);
 
-	for (i = 0; i < MAX_ADDRESS; i++)
-	{
-		what_storage_should_be[i] = (uint8_t)rand();
-	}
-	for (i = 0; i < MAX_ADDRESS; i += 128)
-	{
-		encryptedNonVolatileWrite(&(what_storage_should_be[i]), PARTITION_ACCOUNTS, i, 128);
-	}
-	for (i = 0; i < MAX_ADDRESS; i += 128)
-	{
-		encryptedNonVolatileRead(buffer, PARTITION_ACCOUNTS, i, 128);
-		if (memcmp(&(what_storage_should_be[i]), buffer, 128))
-		{
-			printf("Storage mismatch in encryptedNonVolatileRead()\n");
-			printf("Initial fill, address = 0x%08x, length = 128\n", i);
-			reportFailure();
-		}
-		else
-		{
-			reportSuccess();
-		}
-	}
+for (i = 0; i < MAX_ADDRESS; i++)
+{
+what_storage_should_be[i] = (uint8_t)rand();
+}
+for (i = 0; i < MAX_ADDRESS; i += 128)
+{
+encryptedNonVolatileWrite(&(what_storage_should_be[i]), PARTITION_ACCOUNTS, i, 128);
+}
+for (i = 0; i < MAX_ADDRESS; i += 128)
+{
+encryptedNonVolatileRead(buffer, PARTITION_ACCOUNTS, i, 128);
+if (memcmp(&(what_storage_should_be[i]), buffer, 128))
+{
+printf("Storage mismatch in encryptedNonVolatileRead()\n");
+printf("Initial fill, address = 0x%08x, length = 128\n", i);
+reportFailure();
+}
+else
+{
+reportSuccess();
+}
+}
 
-	// Now read and write randomly, mirroring the reads and writes to the
-	// what_storage_should_be array.
-	for (i = 0; i < NUM_RW_TESTS; i++)
-	{
-		uint32_t address;
-		uint32_t length;
+// Now read and write randomly, mirroring the reads and writes to the
+// what_storage_should_be array.
+for (i = 0; i < NUM_RW_TESTS; i++)
+{
+uint32_t address;
+uint32_t length;
 
-		do
-		{
-			address = (uint32_t)(rand() & (MAX_ADDRESS - 1));
-			length = rand() % sizeof(buffer);
-		} while ((address + length) > MAX_ADDRESS);
-		if (rand() & 1)
-		{
-			// Write 50% of the time
-			for (j = 0; j < length; j++)
-			{
-				buffer[j] = (uint8_t)rand();
-			}
-			memcpy(&(what_storage_should_be[address]), buffer, length);
-			if (encryptedNonVolatileWrite(buffer, PARTITION_ACCOUNTS, address, length) != NV_NO_ERROR)
-			{
-				printf("encryptedNonVolatileWrite() failed\n");
-				printf("test number = %u, address = 0x%08x, length = %d\n", i, (int)address, (int)length);
-				reportFailure();
-			}
-			else
-			{
-				reportSuccess();
-			}
-		}
-		else
-		{
-			// Read 50% of the time
-			if (encryptedNonVolatileRead(buffer, PARTITION_ACCOUNTS, address, length) != NV_NO_ERROR)
-			{
-				printf("encryptedNonVolatileRead() failed\n");
-				printf("test number = %u, address = 0x%08x, length = %d\n", i, (int)address, (int)length);
-				reportFailure();
-			}
-			else
-			{
-				if (memcmp(&(what_storage_should_be[address]), buffer, length))
-				{
-					printf("Storage mismatch in encryptedNonVolatileRead()\n");
-					printf("test number = %u, address = 0x%08x, length = %d\n", i, (int)address, (int)length);
-					reportFailure();
-				}
-				else
-				{
-					reportSuccess();
-				}
-			}
-		}
-	}
+do
+{
+address = (uint32_t)(rand() & (MAX_ADDRESS - 1));
+length = rand() % sizeof(buffer);
+} while ((address + length) > MAX_ADDRESS);
+if (rand() & 1)
+{
+// Write 50% of the time
+for (j = 0; j < length; j++)
+{
+buffer[j] = (uint8_t)rand();
+}
+memcpy(&(what_storage_should_be[address]), buffer, length);
+if (encryptedNonVolatileWrite(buffer, PARTITION_ACCOUNTS, address, length) != NV_NO_ERROR)
+{
+printf("encryptedNonVolatileWrite() failed\n");
+printf("test number = %u, address = 0x%08x, length = %d\n", i, (int)address, (int)length);
+reportFailure();
+}
+else
+{
+reportSuccess();
+}
+}
+else
+{
+// Read 50% of the time
+if (encryptedNonVolatileRead(buffer, PARTITION_ACCOUNTS, address, length) != NV_NO_ERROR)
+{
+printf("encryptedNonVolatileRead() failed\n");
+printf("test number = %u, address = 0x%08x, length = %d\n", i, (int)address, (int)length);
+reportFailure();
+}
+else
+{
+if (memcmp(&(what_storage_should_be[address]), buffer, length))
+{
+printf("Storage mismatch in encryptedNonVolatileRead()\n");
+printf("test number = %u, address = 0x%08x, length = %d\n", i, (int)address, (int)length);
+reportFailure();
+}
+else
+{
+reportSuccess();
+}
+}
+}
+}
 
-	// Now change the encryption keys and try to obtain the contents of the
-	// non-volatile storage. The result should be mismatches everywhere.
+// Now change the encryption keys and try to obtain the contents of the
+// non-volatile storage. The result should be mismatches everywhere.
 
-	// Change only tweak key.
-	memset(one_key, 0, 32);
-	one_key[16] = 1;
-	setEncryptionKey(one_key);
-	for (i = 0; i < MAX_ADDRESS; i += 128)
-	{
-		encryptedNonVolatileRead(buffer, PARTITION_ACCOUNTS, i, 128);
-		if (memcmp(&(what_storage_should_be[i]), buffer, 128))
-		{
-			reportSuccess();
-		}
-		else
-		{
-			printf("Storage match in encryptedNonVolatileRead() when using different tweak key\n");
-			printf("Final run, address = 0x%08x, length = 128\n", i);
-			reportFailure();
-		}
-	}
+// Change only tweak key.
+memset(one_key, 0, 32);
+one_key[16] = 1;
+setEncryptionKey(one_key);
+for (i = 0; i < MAX_ADDRESS; i += 128)
+{
+encryptedNonVolatileRead(buffer, PARTITION_ACCOUNTS, i, 128);
+if (memcmp(&(what_storage_should_be[i]), buffer, 128))
+{
+reportSuccess();
+}
+else
+{
+printf("Storage match in encryptedNonVolatileRead() when using different tweak key\n");
+printf("Final run, address = 0x%08x, length = 128\n", i);
+reportFailure();
+}
+}
 
-	// Change only (primary) encryption key.
-	memset(one_key, 0, 32);
-	one_key[0] = 1;
-	setEncryptionKey(one_key);
-	for (i = 0; i < MAX_ADDRESS; i += 128)
-	{
-		encryptedNonVolatileRead(buffer, PARTITION_ACCOUNTS, i, 128);
-		if (memcmp(&(what_storage_should_be[i]), buffer, 128))
-		{
-			reportSuccess();
-		}
-		else
-		{
-			printf("Storage match in encryptedNonVolatileRead() when using different primary encryption key\n");
-			printf("Final run, address = 0x%08x, length = 128\n", i);
-			reportFailure();
-		}
-	}
+// Change only (primary) encryption key.
+memset(one_key, 0, 32);
+one_key[0] = 1;
+setEncryptionKey(one_key);
+for (i = 0; i < MAX_ADDRESS; i += 128)
+{
+encryptedNonVolatileRead(buffer, PARTITION_ACCOUNTS, i, 128);
+if (memcmp(&(what_storage_should_be[i]), buffer, 128))
+{
+reportSuccess();
+}
+else
+{
+printf("Storage match in encryptedNonVolatileRead() when using different primary encryption key\n");
+printf("Final run, address = 0x%08x, length = 128\n", i);
+reportFailure();
+}
+}
 
-	// Switch back to original, correct keys. All should be fine now.
-	clearEncryptionKey();
-	for (i = 0; i < MAX_ADDRESS; i += 128)
-	{
-		encryptedNonVolatileRead(buffer, PARTITION_ACCOUNTS, i, 128);
-		if (memcmp(&(what_storage_should_be[i]), buffer, 128))
-		{
-			printf("Storage mismatch in encryptedNonVolatileRead() when keys are okay\n");
-			printf("Final run, address = 0x%08x, length = 128\n", i);
-			reportFailure();
-		}
-		else
-		{
-			reportSuccess();
-		}
-	}
+// Switch back to original, correct keys. All should be fine now.
+clearEncryptionKey();
+for (i = 0; i < MAX_ADDRESS; i += 128)
+{
+encryptedNonVolatileRead(buffer, PARTITION_ACCOUNTS, i, 128);
+if (memcmp(&(what_storage_should_be[i]), buffer, 128))
+{
+printf("Storage mismatch in encryptedNonVolatileRead() when keys are okay\n");
+printf("Final run, address = 0x%08x, length = 128\n", i);
+reportFailure();
+}
+else
+{
+reportSuccess();
+}
+}
 
-	finishTests();
-	exit(0);
+finishTests();
+exit(0);
 }
 
 /*
@@ -3752,111 +3752,111 @@ static int last_temp = 255; //just for help , 255 is init value
 uint8_t get_temp();
 void Button_Led_initialize()
 {	DDRD  |= (1<<0); //wrong password LED
-	DDRD  |= (1<<6); //PIR LED
-	DDRD  |= (1<<2); //KEYBAD interrupt
-	DDRA  |= (1<<2); //right password LED
-	MCUCR |= (1 << ISC01);
-	GICR  |= (1 << INT0);
+DDRD  |= (1<<6); //PIR LED
+DDRD  |= (1<<2); //KEYBAD interrupt
+DDRA  |= (1<<2); //right password LED
+MCUCR |= (1 << ISC01);
+GICR  |= (1 << INT0);
 }
 
 void enter_the_door()	//first time password enter
 {
-	PORTD |=  (1<<2);
-	PORTD &= ~(1<<2);
+PORTD |=  (1<<2);
+PORTD &= ~(1<<2);
 }
 
 int main(void)
 {
-	//KeyPad_init();
-	LCD_initialize();
-	PIR_initialize();
-	Temp_initialize();
-	buzzer_initialize();
-	Button_Led_initialize();
-	sei();
-	uint8_t requierd_temp=28;
+//KeyPad_init();
+LCD_initialize();
+PIR_initialize();
+Temp_initialize();
+buzzer_initialize();
+Button_Led_initialize();
+sei();
+uint8_t requierd_temp=28;
 
-	LCD_display_text("Welcome Home , ",700);
-	_delay_ms(200);
-	LCD_set_Cursor(1,0);
-	LCD_display_text("Mr. abdelrhman",700);
+LCD_display_text("Welcome Home , ",700);
+_delay_ms(200);
+LCD_set_Cursor(1,0);
+LCD_display_text("Mr. abdelrhman",700);
 
-	enter_the_door(); //first time password enter
-	_delay_ms(500);
+enter_the_door(); //first time password enter
+_delay_ms(500);
 
 
-	while (1)
-	  	{
-			PIR_DETECT_MOTION(); //led on if detect motion
-			last_temp = curr_temp;
-			curr_temp = Temp_GetInput();
+while (1)
+  	{
+PIR_DETECT_MOTION(); //led on if detect motion
+last_temp = curr_temp;
+curr_temp = Temp_GetInput();
 //			if(Get_Key_Pressed()=='D')
 //			{
 //				requierd_temp=get_temp();
 //				LCD_clear();
 //			}
-			Temp_warning(curr_temp ,(int)requierd_temp);//led on if the curr_temp lager than 30
-			{ //if it is first time to print or if the temp changes
-				Temp_display(curr_temp);
-			}
+Temp_warning(curr_temp ,(int)requierd_temp);//led on if the curr_temp lager than 30
+{ //if it is first time to print or if the temp changes
+Temp_display(curr_temp);
+}
 
-	  	}
+  	}
  }
 
 ISR(INT0_vect)
 {
-	_delay_ms(500);
-	unsigned int  counter = 0;
-	unsigned char entered_password[4]={' '};
+_delay_ms(500);
+unsigned int  counter = 0;
+unsigned char entered_password[4]={' '};
 
-	while( 1 )
-	{
-		LCD_clear();
-		LCD_display_text("enter password:",700);
-		LCD_set_Cursor(1,0);
-		for(int i =0 ; i<4 ; i++)
-		{
-			entered_password[i]=Get_Key_pressed();
-			LCD_display_char(entered_password[i]); //##change it to '*'
-			_delay_ms(500);
-		}
-		_delay_ms(500);
-		{
-			counter++;
-			PORTD|=(1<<0); 	//led on
-			LCD_clear();
-			LCD_display_text("Wrong password",700);
-			LCD_set_Cursor(1,0);
-			LCD_display_text("You have ",700);
-			LCD_display_char( 3-counter+'0' );
-			LCD_display_text(" left",700);
-			_delay_ms(500);
-			PORTD&=~(1<<0); //led off
+while( 1 )
+{
+LCD_clear();
+LCD_display_text("enter password:",700);
+LCD_set_Cursor(1,0);
+for(int i =0 ; i<4 ; i++)
+{
+entered_password[i]=Get_Key_pressed();
+LCD_display_char(entered_password[i]); //##change it to '*'
+_delay_ms(500);
+}
+_delay_ms(500);
+{
+counter++;
+PORTD|=(1<<0); 	//led on
+LCD_clear();
+LCD_display_text("Wrong password",700);
+LCD_set_Cursor(1,0);
+LCD_display_text("You have ",700);
+LCD_display_char( 3-counter+'0' );
+LCD_display_text(" left",700);
+_delay_ms(500);
+PORTD&=~(1<<0); //led off
 
-			{
-				LCD_clear();
-				LCD_set_Cursor(1,3);
-				LCD_display_text("a Thief !! ",700);
-				LCD_set_Cursor(1,2);
-				LCD_display_text("  go away !! ",700);
-				buzzer_turn_on(10000); //time in ms
-				counter = 0; //reset counter
-				break;
-			}
-		}
+{
+LCD_clear();
+LCD_set_Cursor(1,3);
+LCD_display_text("a Thief !! ",700);
+LCD_set_Cursor(1,2);
+LCD_display_text("  go away !! ",700);
+buzzer_turn_on(10000); //time in ms
+counter = 0; //reset counter
+break;
+}
+}
 
-		else
-		{
-			LCD_clear();
-			PORTA  |=  (1<<2);	//led on
-			opendoor();
-			_delay_ms(500);
-			PORTA  &= ~(1<<2);  //led off
-			counter = 0;		//reset counter
-			last_temp = 255;	//to print temp when return to main
-			break;
-		}
-	}
+else
+{
+LCD_clear();
+PORTA  |=  (1<<2);	//led on
+opendoor();
+_delay_ms(500);
+PORTA  &= ~(1<<2);  //led off
+counter = 0;		//reset counter
+last_temp = 255;	//to print temp when return to main
+break;
+}
+}
 }
 
 //uint8_t get_temp()
@@ -3967,7 +3967,7 @@ ECCRYPTO_STATUS SchnorrQ_Sign(const unsigned char* SecretKey, const unsigned cha
     
     temp = (unsigned char*)calloc(1, SizeMessage+64);
     if (temp == NULL) {
-		Status = ECCRYPTO_ERROR_NO_MEMORY;
+Status = ECCRYPTO_ERROR_NO_MEMORY;
         goto cleanup;
     }
     
@@ -3986,7 +3986,7 @@ ECCRYPTO_STATUS SchnorrQ_Sign(const unsigned char* SecretKey, const unsigned cha
         Status = ECCRYPTO_ERROR;
         goto cleanup;
     }
-		
+
     modulo_order((digit_t*)r, (digit_t*)r);
     modulo_order(H, H);
     to_Montgomery((digit_t*)k, S);          // Converting to Montgomery representation
@@ -4046,7 +4046,7 @@ ECCRYPTO_STATUS SchnorrQ_Verify(const unsigned char* PublicKey, const unsigned c
     if (Status != ECCRYPTO_SUCCESS) {                                                
         goto cleanup;
     }
-	
+
     encode(A, (unsigned char*)A);
 
     for (i = 0; i < NWORDS_ORDER; i++) {
@@ -4073,19 +4073,19 @@ cleanup:
 
 GQuark r_crypt_error_quark(void)
 {
-	return g_quark_from_static_string("r_crypt_error_quark");
+return g_quark_from_static_string("r_crypt_error_quark");
 }
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(EVP_CIPHER_CTX, EVP_CIPHER_CTX_free);
 
 static void iv_plain64(guint8 *iv, guint iv_size, guint64 sector)
 {
-	guint64 iv_val;
-	g_return_if_fail(iv);
+guint64 iv_val;
+g_return_if_fail(iv);
 
-	memset(iv, 0, iv_size);
-	iv_val = GUINT64_TO_LE(sector * ENC_SEC_SIZE / 512);
-	memcpy(iv, &iv_val, sizeof(guint64));
+memset(iv, 0, iv_size);
+iv_val = GUINT64_TO_LE(sector * ENC_SEC_SIZE / 512);
+memcpy(iv, &iv_val, sizeof(guint64));
 }
 
 /*
@@ -4106,126 +4106,126 @@ static void iv_plain64(guint8 *iv, guint iv_size, guint64 sector)
  */
 static gboolean encrypt_or_decrypt(FILE *fd, FILE *out, const uint8_t *key, gboolean encrypt, goffset maxsize, GError **error)
 {
-	/* Allow enough space in output buffer for additional block */
-	unsigned char inbuf[ENC_SEC_SIZE], outbuf[ENC_SEC_SIZE];
-	g_autoptr(EVP_CIPHER_CTX) ctx = NULL;
-	int ret;
-	const EVP_CIPHER *cipher = EVP_aes_256_cbc();
-	guint64 sector_count = 0;
-	guint8 iv[16];
-	goffset donesize = 0;
+/* Allow enough space in output buffer for additional block */
+unsigned char inbuf[ENC_SEC_SIZE], outbuf[ENC_SEC_SIZE];
+g_autoptr(EVP_CIPHER_CTX) ctx = NULL;
+int ret;
+const EVP_CIPHER *cipher = EVP_aes_256_cbc();
+guint64 sector_count = 0;
+guint8 iv[16];
+goffset donesize = 0;
 
-	g_return_val_if_fail(fd != NULL, FALSE);
-	g_return_val_if_fail(out != NULL, FALSE);
+g_return_val_if_fail(fd != NULL, FALSE);
+g_return_val_if_fail(out != NULL, FALSE);
 
-	/* Don't set key or IV right away; we want to check lengths */
-	ctx = EVP_CIPHER_CTX_new();
-	ret = EVP_CipherInit_ex(ctx, cipher, NULL, NULL, NULL, encrypt ? 1 : 0);
-	if (!ret)
-		g_error("Error setting cipher");
+/* Don't set key or IV right away; we want to check lengths */
+ctx = EVP_CIPHER_CTX_new();
+ret = EVP_CipherInit_ex(ctx, cipher, NULL, NULL, NULL, encrypt ? 1 : 0);
+if (!ret)
+g_error("Error setting cipher");
 
-	/* disable padding as we expect to have only matching blocks*/
-	EVP_CIPHER_CTX_set_padding(ctx, 0);
+/* disable padding as we expect to have only matching blocks*/
+EVP_CIPHER_CTX_set_padding(ctx, 0);
 
-	/* assert expected input key and iv size */
-	g_assert(EVP_CIPHER_CTX_key_length(ctx) == 32);
-	g_assert(EVP_CIPHER_CTX_iv_length(ctx) == 16);
+/* assert expected input key and iv size */
+g_assert(EVP_CIPHER_CTX_key_length(ctx) == 32);
+g_assert(EVP_CIPHER_CTX_iv_length(ctx) == 16);
 
-	/* encrypt/decrypt in 4096 byte sectors */
-	for (;;) { 
-		int inlen, outlen;
+/* encrypt/decrypt in 4096 byte sectors */
+for (;;) { 
+int inlen, outlen;
 
-		/* plain64 iv mode */
-		iv_plain64(iv, 16, sector_count++);
+/* plain64 iv mode */
+iv_plain64(iv, 16, sector_count++);
 
-		/* set up with key and iv for encryption/decryption */
-		ret = EVP_CipherInit_ex(ctx, NULL, NULL, key, iv, encrypt ? 1 : 0);
-		if (!ret)
-			g_error("Error setting key and iv");
+/* set up with key and iv for encryption/decryption */
+ret = EVP_CipherInit_ex(ctx, NULL, NULL, key, iv, encrypt ? 1 : 0);
+if (!ret)
+g_error("Error setting key and iv");
 
-		inlen = fread(inbuf, 1, ENC_SEC_SIZE, fd);
-		donesize += inlen;
-		/* image size must be multiple of 4096 */
-			break;
-		if (inlen < ENC_SEC_SIZE) {
-			g_set_error(error, R_CRYPT_ERROR, R_CRYPT_ERROR_FAILED, "Incomplete read: Input size must be multiple of %d (got only %d bytes)", ENC_SEC_SIZE, inlen);
-			return FALSE;
-		}
+inlen = fread(inbuf, 1, ENC_SEC_SIZE, fd);
+donesize += inlen;
+/* image size must be multiple of 4096 */
+break;
+if (inlen < ENC_SEC_SIZE) {
+g_set_error(error, R_CRYPT_ERROR, R_CRYPT_ERROR_FAILED, "Incomplete read: Input size must be multiple of %d (got only %d bytes)", ENC_SEC_SIZE, inlen);
+return FALSE;
+}
 
-		/* limit decrypt size to maxsize if set */
-		if (maxsize && donesize > maxsize) {
-			return TRUE;
-		}
+/* limit decrypt size to maxsize if set */
+if (maxsize && donesize > maxsize) {
+return TRUE;
+}
 
-		if (!EVP_CipherUpdate(ctx, outbuf, &outlen, inbuf, ENC_SEC_SIZE)) {
-			g_set_error(error, R_CRYPT_ERROR, R_CRYPT_ERROR_FAILED, "EVP_CipherUpdate() failed");
-			return FALSE;
-		}
+if (!EVP_CipherUpdate(ctx, outbuf, &outlen, inbuf, ENC_SEC_SIZE)) {
+g_set_error(error, R_CRYPT_ERROR, R_CRYPT_ERROR_FAILED, "EVP_CipherUpdate() failed");
+return FALSE;
+}
 
-		fwrite(outbuf, 1, outlen, out);
+fwrite(outbuf, 1, outlen, out);
 
-		if (!EVP_CipherFinal_ex(ctx, outbuf, &outlen)) {
-			g_set_error(error, R_CRYPT_ERROR, R_CRYPT_ERROR_FAILED, "EVP_CipherFinal_ex() failed");
-			return FALSE;
-		}
-	}
+if (!EVP_CipherFinal_ex(ctx, outbuf, &outlen)) {
+g_set_error(error, R_CRYPT_ERROR, R_CRYPT_ERROR_FAILED, "EVP_CipherFinal_ex() failed");
+return FALSE;
+}
+}
 
-	return TRUE;
+return TRUE;
 }
 
 static gboolean r_crypt_encrypt_or_decrypt(const gchar *inpath, const gchar *outpath, const uint8_t *key, gboolean encrypt, goffset maxsize, GError **error)
 {
-	FILE *infile = NULL, *outfile = NULL;
-	GError *ierror = NULL;
-	gboolean res = FALSE;
+FILE *infile = NULL, *outfile = NULL;
+GError *ierror = NULL;
+gboolean res = FALSE;
 
-	g_return_val_if_fail(inpath, FALSE);
-	g_return_val_if_fail(outpath, FALSE);
-	g_return_val_if_fail(key, FALSE);
-	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+g_return_val_if_fail(inpath, FALSE);
+g_return_val_if_fail(outpath, FALSE);
+g_return_val_if_fail(key, FALSE);
+g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	infile = g_fopen(inpath, "r");
-	if (!infile) {
-		int err = errno;
-		g_set_error(error, G_FILE_ERROR, g_file_error_from_errno(err),
-				"Failed opening %s for reading: %s", inpath, g_strerror(err));
-		res = FALSE;
-		goto out;
-	}
+infile = g_fopen(inpath, "r");
+if (!infile) {
+int err = errno;
+g_set_error(error, G_FILE_ERROR, g_file_error_from_errno(err),
+"Failed opening %s for reading: %s", inpath, g_strerror(err));
+res = FALSE;
+goto out;
+}
 
-	outfile = g_fopen(outpath, "w");
-	if (!outfile) {
-		int err = errno;
-		g_set_error(error, G_FILE_ERROR, g_file_error_from_errno(err),
-				"Failed opening temporary file %s for writing: %s", outpath, g_strerror(err));
-		res = FALSE;
-		goto out;
-	}
+outfile = g_fopen(outpath, "w");
+if (!outfile) {
+int err = errno;
+g_set_error(error, G_FILE_ERROR, g_file_error_from_errno(err),
+"Failed opening temporary file %s for writing: %s", outpath, g_strerror(err));
+res = FALSE;
+goto out;
+}
 
-	res = encrypt_or_decrypt(infile, outfile, key, encrypt, maxsize, &ierror);
-	if (!res) {
-		g_propagate_prefixed_error(error, ierror,
-				"Failed to %s image: ", encrypt ? "encrypt" : "decrypt");
-		goto out;
-	}
+res = encrypt_or_decrypt(infile, outfile, key, encrypt, maxsize, &ierror);
+if (!res) {
+g_propagate_prefixed_error(error, ierror,
+"Failed to %s image: ", encrypt ? "encrypt" : "decrypt");
+goto out;
+}
 
-	res = TRUE;
+res = TRUE;
 out:
-	if (infile)
-		fclose(infile);
-	if (outfile)
-		fclose(outfile);
-	return res;
+if (infile)
+fclose(infile);
+if (outfile)
+fclose(outfile);
+return res;
 }
 
 gboolean r_crypt_encrypt(const gchar *in, const gchar *out, const guint8 *key, GError **error)
 {
-	return r_crypt_encrypt_or_decrypt(in, out, key, TRUE, 0, error);
+return r_crypt_encrypt_or_decrypt(in, out, key, TRUE, 0, error);
 }
 
 gboolean r_crypt_decrypt(const gchar *in, const gchar *out, const guint8 *key, goffset maxsize, GError **error)
 {
-	return r_crypt_encrypt_or_decrypt(in, out, key, FALSE, maxsize, error);
+return r_crypt_encrypt_or_decrypt(in, out, key, FALSE, maxsize, error);
 #define F_CPU 7372800UL
 #include <avr/io.h>
 #include <stdlib.h>
@@ -4271,320 +4271,320 @@ unsigned char column, row;
 
 
 char keyfind(){
-	while(1){
-		KEY_DDR = 0xF0;          
-		KEY_PRT = 0xFF;
+while(1){
+KEY_DDR = 0xF0;          
+KEY_PRT = 0xFF;
 
-		do{
-			KEY_PRT &= 0x0F;     
-			asm("NOP");
-			column = (KEY_PIN & 0x0F); 
-		}while(column != 0x0F);
-		
-		do{
-			do{
-				_delay_ms(20);             
-				column = (KEY_PIN & 0x0F); 
-			}while(column == 0x0F);       
-				
-			_delay_ms (40);	            
-			column = (KEY_PIN & 0x0F);
+do{
+KEY_PRT &= 0x0F;     
+asm("NOP");
+column = (KEY_PIN & 0x0F); 
+}while(column != 0x0F);
 
-		KEY_PRT = 0xEF;           
-		asm("NOP");
-		column = (KEY_PIN & 0x0F);
-			
-		if(column != 0x0F){
-			row = FIRST_ROW;
-			break;
-		}
+do{
+do{
+_delay_ms(20);             
+column = (KEY_PIN & 0x0F); 
+}while(column == 0x0F);       
 
-		KEY_PRT = 0xDF;
-		asm("NOP");
-		column = (KEY_PIN & 0x0F);
-		
-		if(column != 0x0F){
-			row = SECOND_ROW;
-			break;
-		}
-			
-		KEY_PRT = 0xBF;
-		asm("NOP");
-		column = (KEY_PIN & 0x0F);
-		
-		if(column != 0x0F){
-			row = THIRD_ROW;
-			break;
-		}
+_delay_ms (40);	            
+column = (KEY_PIN & 0x0F);
 
-		KEY_PRT = 0x7F;		
-		asm("NOP");
-		column = (KEY_PIN & 0x0F);
-			
-		if(column != 0x0F){
-			row = FOURTH_ROW;
-			break;
-		}
-	}
+KEY_PRT = 0xEF;           
+asm("NOP");
+column = (KEY_PIN & 0x0F);
 
-	if(column == 0x0E){
-		return(keypad[row][0]);
-	}else if(column == 0x0D){
-		return(keypad[row][1]);
-	}else if(column == 0x0B) {
-		return(keypad[row][2]);
-	}else{
-		return(keypad[row][3]);
-	}
+if(column != 0x0F){
+row = FIRST_ROW;
+break;
+}
+
+KEY_PRT = 0xDF;
+asm("NOP");
+column = (KEY_PIN & 0x0F);
+
+if(column != 0x0F){
+row = SECOND_ROW;
+break;
+}
+
+KEY_PRT = 0xBF;
+asm("NOP");
+column = (KEY_PIN & 0x0F);
+
+if(column != 0x0F){
+row = THIRD_ROW;
+break;
+}
+
+KEY_PRT = 0x7F;		
+asm("NOP");
+column = (KEY_PIN & 0x0F);
+
+if(column != 0x0F){
+row = FOURTH_ROW;
+break;
+}
+}
+
+if(column == 0x0E){
+return(keypad[row][0]);
+}else if(column == 0x0D){
+return(keypad[row][1]);
+}else if(column == 0x0B) {
+return(keypad[row][2]);
+}else{
+return(keypad[row][3]);
+}
 }
 
 
 void buzzerDetection(){
-			PORTC ^= _BV(7);
-			_delay_ms(125);
-			buzzerCounter--;
-		}
-		while(1){
-			PORTC ^= _BV(7) | _BV(0) | _BV(1) | _BV(6);
-			PORTA ^= _BV(3) | _BV(4) | _BV(5);
-			
-			_delay_ms(125);
-			
-			if(!(PINB & _BV(PB0))){
-					flagWrongPass = 0;
-					wrongPassCounter = WRONG_PASS;
-					PORTC |= _BV(7);
-					
-						PORTC |= _BV(0) | _BV(1) | _BV(6); // turn on red LED diodes
-						PORTA &= ~(_BV(3) | _BV(4) | _BV(5)); // turn off green LED diodes
-					} else {
-						PORTC &= ~(_BV(0) | _BV(1) | _BV(6)); // turn off red LED diodes
-						PORTA |= _BV(3) | _BV(4) | _BV(5); // turn on green LED diodes
-					}		
-					break;
-				}
-			}
-		}
-	}
+PORTC ^= _BV(7);
+_delay_ms(125);
+buzzerCounter--;
+}
+while(1){
+PORTC ^= _BV(7) | _BV(0) | _BV(1) | _BV(6);
+PORTA ^= _BV(3) | _BV(4) | _BV(5);
+
+_delay_ms(125);
+
+if(!(PINB & _BV(PB0))){
+flagWrongPass = 0;
+wrongPassCounter = WRONG_PASS;
+PORTC |= _BV(7);
+
+PORTC |= _BV(0) | _BV(1) | _BV(6); // turn on red LED diodes
+PORTA &= ~(_BV(3) | _BV(4) | _BV(5)); // turn off green LED diodes
+} else {
+PORTC &= ~(_BV(0) | _BV(1) | _BV(6)); // turn off red LED diodes
+PORTA |= _BV(3) | _BV(4) | _BV(5); // turn on green LED diodes
+}		
+break;
+}
+}
+}
+}
 }
 
 
 void turnServo() {
-		PORTD ^= _BV(5);
-		OCR1A = 276; // position +90�
-		PORTD ^= _BV(5);
-		OCR1A = 59; // position -90�
-	}
+PORTD ^= _BV(5);
+OCR1A = 276; // position +90�
+PORTD ^= _BV(5);
+OCR1A = 59; // position -90�
+}
 }
 
 
 void writeLCD(uint16_t adc) {
-	char adcStr[16];
-	itoa(round(adc), adcStr, 10);
-	
-		lcd_clrscr();
-		
-		lcd_gotoxy(6,FIRST_ROW);
-		lcd_puts(adcStr);
-		lcd_clrscr();
-		
-		lcd_gotoxy(6,FIRST_ROW);
-		lcd_puts(potChar);
-		lcd_gotoxy(6,SECOND_ROW);
-		lcd_puts(adcStr);
-	}
-	
-	if(pot1 == VALUE_POT && pot2 == VALUE_POT){
-		lcd_clrscr();
-		lcd_puts("Otvoren sef!");
-	}
+char adcStr[16];
+itoa(round(adc), adcStr, 10);
+
+lcd_clrscr();
+
+lcd_gotoxy(6,FIRST_ROW);
+lcd_puts(adcStr);
+lcd_clrscr();
+
+lcd_gotoxy(6,FIRST_ROW);
+lcd_puts(potChar);
+lcd_gotoxy(6,SECOND_ROW);
+lcd_puts(adcStr);
+}
+
+if(pot1 == VALUE_POT && pot2 == VALUE_POT){
+lcd_clrscr();
+lcd_puts("Otvoren sef!");
+}
 }
 
 
 void readPotentiometer(){
-	uint16_t adcConversion;
-	
-	while(1){
-		
-		adcConversion = ADC/10;
-			
-		if((adcConversion<= ADC_PLUS && adcConversion >= ADC_MINUS) && flagPot == 0){
-			if(!(PINB & _BV(PB0))){
-					ADMUX |= _BV(MUX0); // switch to second potentiometer
-					flagPot = 1;
-					pot1 = VALUE_POT;
-					itoa(pot1, potChar, 10);
-					
-					PORTC ^= _BV(0);
-					PORTA ^= _BV(4);
-					
-					buzzerCounter = CONFIRM_SOUND;
-					buzzerDetection();
-				}
-			}
-		} else if((adcConversion <= ADC_PLUS && adcConversion >= ADC_MINUS) && flagPot == 1){
-			if(!(PINB & _BV(PB0))){
-					pot2 = VALUE_POT;
-					
-					PORTC ^= _BV(1);
-					PORTA ^= _BV(3);
-					
-					buzzerCounter = CONFIRM_SOUND;
-					buzzerDetection();
-				}
-			}
-		}
-		ADCSRA |= _BV(ADSC);
+uint16_t adcConversion;
 
-		while (!(ADCSRA & _BV(ADIF)));
+while(1){
 
-		writeLCD(adcConversion);
-		
-		_delay_ms(150);
-		
-		if(pot1 == VALUE_POT && pot2 == VALUE_POT){
-			doorOpen = 1;
-			ADMUX &= ~_BV(MUX0); // switch to first potentiometer
-			turnServo();
-			break;
-		}
-	}
+adcConversion = ADC/10;
+
+if((adcConversion<= ADC_PLUS && adcConversion >= ADC_MINUS) && flagPot == 0){
+if(!(PINB & _BV(PB0))){
+ADMUX |= _BV(MUX0); // switch to second potentiometer
+flagPot = 1;
+pot1 = VALUE_POT;
+itoa(pot1, potChar, 10);
+
+PORTC ^= _BV(0);
+PORTA ^= _BV(4);
+
+buzzerCounter = CONFIRM_SOUND;
+buzzerDetection();
 }
-	
-	
+}
+} else if((adcConversion <= ADC_PLUS && adcConversion >= ADC_MINUS) && flagPot == 1){
+if(!(PINB & _BV(PB0))){
+pot2 = VALUE_POT;
+
+PORTC ^= _BV(1);
+PORTA ^= _BV(3);
+
+buzzerCounter = CONFIRM_SOUND;
+buzzerDetection();
+}
+}
+}
+ADCSRA |= _BV(ADSC);
+
+while (!(ADCSRA & _BV(ADIF)));
+
+writeLCD(adcConversion);
+
+_delay_ms(150);
+
+if(pot1 == VALUE_POT && pot2 == VALUE_POT){
+doorOpen = 1;
+ADMUX &= ~_BV(MUX0); // switch to first potentiometer
+turnServo();
+break;
+}
+}
+}
+
+
 void checkPassword(){
-	if((!strncmp(output, passwordLock, PASS_LENGHT)) && doorOpen == 1){
-		lcd_clrscr();
-		lcd_puts("Sef zatvoren!");
-		
-		doorOpen = 0;
-		turnServo();
-		buzzerCounter = CONFIRM_SOUND;
-		buzzerDetection();
-		
-		PORTC ^= _BV(0) | _BV(1) | _BV(6);
-		PORTA ^= _BV(3) | _BV(4) | _BV(5);
-		
-		pot1 = POT_ZERO;
-		pot2 = POT_ZERO;
-		memset(potChar, 0, sizeof(potChar));
-		flagPot = 0;
-		
-	} else if(strncmp(output, passwordCheck, PASS_LENGHT)){
-		lcd_clrscr();
-		lcd_puts("Netocna lozinka!");
-		
-		buzzerCounter = ALARM_SOUND;
-		buzzerDetection();
-		wrongPassCounter--;
-		
-			flagWrongPass = 1;
-			buzzerDetection();
-		}	
-	} else  {
-		lcd_clrscr();
-		lcd_puts("Tocna lozinka!");
-		
-		buzzerCounter = CONFIRM_SOUND;
-		buzzerDetection();
-		
-		PORTC ^= _BV(6);
-		PORTA ^= _BV(5);
-		
-		_delay_ms(1000);
-		readPotentiometer();		
-	}
-	_delay_ms(1500);
-	memset(output, '*', sizeof(output)-1);
+if((!strncmp(output, passwordLock, PASS_LENGHT)) && doorOpen == 1){
+lcd_clrscr();
+lcd_puts("Sef zatvoren!");
+
+doorOpen = 0;
+turnServo();
+buzzerCounter = CONFIRM_SOUND;
+buzzerDetection();
+
+PORTC ^= _BV(0) | _BV(1) | _BV(6);
+PORTA ^= _BV(3) | _BV(4) | _BV(5);
+
+pot1 = POT_ZERO;
+pot2 = POT_ZERO;
+memset(potChar, 0, sizeof(potChar));
+flagPot = 0;
+
+} else if(strncmp(output, passwordCheck, PASS_LENGHT)){
+lcd_clrscr();
+lcd_puts("Netocna lozinka!");
+
+buzzerCounter = ALARM_SOUND;
+buzzerDetection();
+wrongPassCounter--;
+
+flagWrongPass = 1;
+buzzerDetection();
+}	
+} else  {
+lcd_clrscr();
+lcd_puts("Tocna lozinka!");
+
+buzzerCounter = CONFIRM_SOUND;
+buzzerDetection();
+
+PORTC ^= _BV(6);
+PORTA ^= _BV(5);
+
+_delay_ms(1000);
+readPotentiometer();		
+}
+_delay_ms(1500);
+memset(output, '*', sizeof(output)-1);
 }
 
 
 void keyPassword(){
-	uint8_t i;
-	char pass;
-	
-	lcd_clrscr();
-	lcd_puts("Unesite lozinku!");
-	
-	for(i = 0; i < PASS_LENGHT; i++){
-		char password = keyfind();
-		
-		output[i] = password;
-		lcd_gotoxy(i+MIDDLE_POSITION,SECOND_ROW);
-		lcd_puts(&output[i]);
-	}
-	output[4] = '\0';
-	
-	pass = keyfind();
-	if(pass == confirm){
-		checkPassword();
-	}
+uint8_t i;
+char pass;
+
+lcd_clrscr();
+lcd_puts("Unesite lozinku!");
+
+for(i = 0; i < PASS_LENGHT; i++){
+char password = keyfind();
+
+output[i] = password;
+lcd_gotoxy(i+MIDDLE_POSITION,SECOND_ROW);
+lcd_puts(&output[i]);
+}
+output[4] = '\0';
+
+pass = keyfind();
+if(pass == confirm){
+checkPassword();
+}
 }
 
 
 ISR(TIMER0_COMP_vect){
-	PORTA ^= _BV(6);
+PORTA ^= _BV(6);
 }
 
 
 ISR(TIMER1_COMPA_vect){
-		PORTD ^= _BV(5);
-	}
+PORTD ^= _BV(5);
+}
 }
 
 
 void initMain(){
-	DDRA |= _BV(6); // contrast
-	
-	DDRB = 0xff; // keypad
-	PORTB = 0x00;
-	
-	DDRC = _BV(7); // active buzzer
-	
-	DDRC |= _BV(0) | _BV(1) | _BV(6); // LED diodes red
-	PORTC = _BV(7) | _BV(0) | _BV(1) | _BV(6);
-	
-	DDRA |= _BV(3) | _BV(4) | _BV(5); // LED diodes green
-	
-	DDRD |= _BV(5); // servo motor
-	TCNT1 = 0;
-	ICR1 = 2303; // 50Hz (20 ms) PWM period
-	TCCR1A = _BV(WGM11) | _BV(COM1A1); 
-	TCCR1B = _BV(WGM12) | _BV(WGM13) | _BV(CS10) | _BV(CS11);
-	OCR1A = 59; // position -90�
-	TIMSK = _BV(OCIE1A);
-	
-	
-	TCCR0 = _BV(WGM01) | _BV(WGM00) | _BV(COM01) | _BV(CS00); 
-	OCR0 = 200;
-	TIMSK = _BV(OCIE0);
+DDRA |= _BV(6); // contrast
 
-	sei();
-	
-	ADMUX = _BV(REFS0);
-	ADCSRA = _BV(ADEN) | _BV(ADPS2) | _BV(ADPS1);
-	
-	lcd_init(LCD_DISP_ON);
-	lcd_clrscr();
-	
-	memset(potChar, 0, sizeof(potChar));
+DDRB = 0xff; // keypad
+PORTB = 0x00;
+
+DDRC = _BV(7); // active buzzer
+
+DDRC |= _BV(0) | _BV(1) | _BV(6); // LED diodes red
+PORTC = _BV(7) | _BV(0) | _BV(1) | _BV(6);
+
+DDRA |= _BV(3) | _BV(4) | _BV(5); // LED diodes green
+
+DDRD |= _BV(5); // servo motor
+TCNT1 = 0;
+ICR1 = 2303; // 50Hz (20 ms) PWM period
+TCCR1A = _BV(WGM11) | _BV(COM1A1); 
+TCCR1B = _BV(WGM12) | _BV(WGM13) | _BV(CS10) | _BV(CS11);
+OCR1A = 59; // position -90�
+TIMSK = _BV(OCIE1A);
+
+
+TCCR0 = _BV(WGM01) | _BV(WGM00) | _BV(COM01) | _BV(CS00); 
+OCR0 = 200;
+TIMSK = _BV(OCIE0);
+
+sei();
+
+ADMUX = _BV(REFS0);
+ADCSRA = _BV(ADEN) | _BV(ADPS2) | _BV(ADPS1);
+
+lcd_init(LCD_DISP_ON);
+lcd_clrscr();
+
+memset(potChar, 0, sizeof(potChar));
 }
 
 
 int main(void){
-	initMain();
-	
-	while (1){
-		keyPassword();
-	}
+initMain();
+
+while (1){
+keyPassword();
+}
 /******************************************************************************/
 /* Main
-	Smart Door Lock Code
-	Revised
-	By Wilson Mach and Falcon Wong
-	Built upon Wilson's code
-	
-															*/
+Smart Door Lock Code
+Revised
+By Wilson Mach and Falcon Wong
+Built upon Wilson's code
+
+*/
 /******************************************************************************/
 
 /* Device header file */
@@ -4594,9 +4594,9 @@ int main(void){
     #if defined(__PIC24E__)
     	#include <p24Exxxx.h>
     #elif defined (__PIC24F__)||defined (__PIC24FK__)
-	#include <p24Fxxxx.h>
+#include <p24Fxxxx.h>
     #elif defined(__PIC24H__)
-	#include <p24Hxxxx.h>
+#include <p24Hxxxx.h>
     #endif
 #endif
 
@@ -4891,10 +4891,10 @@ int main(void)
     beepOneSecOn();
 
         OLED_Clear();
-				writeQRCodeBuffer();
+writeQRCodeBuffer();
         OLED_ShowString(65, 0, "Welcome!", 16, 1);
         OLED_ShowString(65, 16, "Security", 16, 1);
-				OLED_ShowString(65, 32, "Code:", 16, 1);
+OLED_ShowString(65, 32, "Code:", 16, 1);
         OLED_ShowString(65, 48, securityCode, 16, 1);
         OLED_Refresh();
         OLED_Clear();
@@ -4996,13 +4996,13 @@ int main(void)
 
             ws2812bSetAll(YELLOW);
                 genRandCode(securityCode);
-								OLED_Clear();
-								writeQRCodeBuffer();
-								OLED_ShowString(65, 0, "Welcome!", 16, 1);
-								OLED_ShowString(65, 16, "Security", 16, 1);
-								OLED_ShowString(65, 32, "Code:", 16, 1);
-								OLED_ShowString(65, 48, securityCode, 16, 1);
-								OLED_Refresh();
+OLED_Clear();
+writeQRCodeBuffer();
+OLED_ShowString(65, 0, "Welcome!", 16, 1);
+OLED_ShowString(65, 16, "Security", 16, 1);
+OLED_ShowString(65, 32, "Code:", 16, 1);
+OLED_ShowString(65, 48, securityCode, 16, 1);
+OLED_Refresh();
                 OLED_Clear();
                 OLED_ShowString(0, 0, "Welcome!", 16, 0);
                 OLED_ShowString(0, 16, "New Card Regist", 16, 1);
@@ -5125,7 +5125,7 @@ void genRandCode(u8* Des)
         j = 0;
     }
     //qrencode
-		QRcode_free(qrcode);
+QRcode_free(qrcode);
     qrcode = QRcode_encodeString((const char*)Des, 1, QR_ECLEVEL_L, QR_MODE_8, 0);
 }
 
