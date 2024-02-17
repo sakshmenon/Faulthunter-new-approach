@@ -1,0 +1,98 @@
+if(FSInit()!=TRUE)                          // Initialize the filesystem for reading						
+        if ((USBGetDeviceState() >= CONFIGURED_STATE) && (USBIsDeviceSuspended() == FALSE))						
+                if (lastSampleTicks == 0) { lastSampleTicks = now; }						
+        if (inactive > 3)						
+        if (status.actionCountdown > 0)						
+            if (status.actionCountdown == 0)						
+    if (++LEDTimer == 0) { LEDtoggle = !LEDtoggle; }						
+    if (status.attached > 0)						
+        else if (status.ledOverride >= 0)						
+            if (inactive == 0)						
+                    if (settings.debuggingInfo >= 1 || status.debugFlashCount > 0) { LED_SET(LED_YELLOW); if (status.debugFlashCount > 0) status.debugFlashCount--; Delay10us(5); }						
+            if (FSDiskFree() == 0)						
+if (ACCEL_FREQUENCY_FOR_RATE(settings.sampleRate) >= 1600) { isHighSpeed = 1; }	
+if (isHighSpeed) { CLOCK_PLL();	}
+                            if (result > 0)						
+                    if (status.lastSampledTicks == 0x0000) { status.lastSampledTicks = now; }					
+                    if (status.lastWrittenTicks == 0x0000) { status.lastWrittenTicks = now; }					
+                            if (failCounter > 5)						
+                        else if (now - status.lastWrittenTicks > 30)						
+                            if (failCounter > 5)						
+                                if (FSDiskFree() == 0)						
+    if (restart != 1)						
+            if (led)						
+                if (countdown > 0)						
+if(ever_saved == 0) { // if first run on this chip
+    if (bus->timeout == 0)
+    return ret == 1 ? count : 0;
+if (r != 0)
+while (!seen_count)
+if ((data_unit_length <= 0) || (data_unit_length > 10000000))
+if ((data_unit_length & 0x7f) != 0)
+    if (len < 0) {
+    if (0 != iotx_post(httpc,
+    if (ret < 0) {
+    if (0 == iotx_http_context->keep_alive) {
+    if (req_payload) {
+    if (rsp_payload) {
+    if (0 == iotx_http_context->is_authed) {
+    if (ret < 0) {
+    if (0 == iotx_http_context->keep_alive) {
+    if (user_data) {
+  if(fingerprintID == 1)
+   if(fingerprintID == 2)
+        if (MDB_DataCount() > 5)
+        if (MDB_DataCount() > 0)
+        if (MDB_DataCount() > 1)
+    if (begin_session_counter >= 50)
+    if (vend_approved_counter >= 50)
+        if (MDB_DataCount() > 4)
+        if (MDB_DataCount() > 2)
+        if (MDB_DataCount() > 0)
+        if (MDB_DataCount() > 4)
+        if (MDB_DataCount() > 29)
+if(last_temp == 255 || (curr_temp-last_temp) )
+if( (memcmp(entered_password, password, sizeof(entered_password)) != 0) )
+if(counter == 3)
+    if (CryptoHashFunction(SecretKey, 32, k) != 0) {   
+    if (CryptoHashFunction(SecretKey, 32, k) != 0) {   
+    if (CryptoHashFunction(temp+32, SizeMessage+32, r) != 0) {   
+    if (CryptoHashFunction(temp, SizeMessage+64, h) != 0) {   
+    if (CryptoHashFunction(temp, SizeMessage+64, h) != 0) {   
+if (inlen <= 0)
+}while(column == 0x0F);
+if(flagWrongPass == 0){
+while(buzzerCounter > 0){
+} else if(flagWrongPass == 1){
+if((PINB & _BV(PB0)) == 0){
+if(doorOpen == 0){
+if(doorOpen == 1){
+} else if(doorOpen == 0){
+if(flagPot == 0){
+} else if(flagPot == 1){
+if((PINB & _BV(PB0)) == 0){
+if((PINB & _BV(PB0)) == 0){
+if(wrongPassCounter == 0){
+if(doorOpen == 1){
+                if (wifiEnrollProgress != 0) break;
+                if(lockFlag == FALSE){
+                if((minute % 30) == 0 && (updateFlag == FALSE)){
+    if (modeFlag == 0) {
+    } else if (modeFlag == 1) {
+                        codeFlag = 0;
+                if (codeFlag == 1) {
+                } else if (codeFlag == 0) {
+            if (modeFlag == 0) {
+            } else if (modeFlag == 1) {
+        if (!status) {
+            if (!status) {
+                if (!status) {
+                        if (!status) {
+                            if (!status) //process card
+                                if (modeFlag == 0) {
+                                } else if (modeFlag == 1) {
+    if (wifi_connected) {
+if (validate)
+        if (validate)
+        if (is_verified == true)
+        if (is_verified == true)
