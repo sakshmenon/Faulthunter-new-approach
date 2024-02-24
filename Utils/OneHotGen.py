@@ -1,12 +1,9 @@
-import dataframe_gen
 import numpy as np
 
-def tokenize():
-    df = dataframe_gen.dataframe_init()
+def tokenize(df):
 
     x_vec = df['Lines']
     y_vec = df['Label']
-
 
     vocab, index = {}, 1  # start indexing from 1
     vocab['<pad>'] = 0  # add a padding token
@@ -31,7 +28,7 @@ def one_hot_encode(categories, category_to_index):
             gloabl_OHV_dictionary[category] = one_hot_vectors[i]
     return one_hot_vectors, gloabl_OHV_dictionary
 
-def vectorize_and_padd(df):
+def vectorize_and_padd(df, gloabl_OHV_dictionary):
     for line in range(df.shape[0]):
         df.loc[line].Lines = df.loc[line].Lines.split()
         for element_index in range(len(df.loc[line].Lines)):
@@ -46,8 +43,8 @@ def vectorize_and_padd(df):
             df.loc[i[0]].Lines.insert(-1, gloabl_OHV_dictionary['<pad>'])
     return df
 
-def OHV_init():
-    vocab, df = tokenize()
+def OHV_init(self, df):
+    vocab, df = tokenize(df)
     global_one_hot_vectors, gloabl_OHV_dictionary = one_hot_encode(vocab.keys(), vocab)
-    df = vectorize_and_padd(df)
+    df = vectorize_and_padd(df, gloabl_OHV_dictionary)
     return df, global_one_hot_vectors, gloabl_OHV_dictionary
