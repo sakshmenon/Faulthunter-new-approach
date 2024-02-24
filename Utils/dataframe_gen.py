@@ -1,7 +1,12 @@
 import pandas as pd
 import os
+import platform
 
-dataframe = pd.read_excel("/home/sakshmeno/Documents/GitHub/C-RNN-approach/Labels/Labelling_Prateek_Guillermo.xlsx")
+if platform.machine() == 'arm64':
+    pth = "/Users/saksh.menon/Documents/GitHub/C-RNN-approach/Labels/Labelling_Prateek_Guillermo.xlsx"
+elif platform.machine() == 'x86_64':
+    pth = "/home/sakshmeno/Documents/GitHub/C-RNN-approach/Labels/Labelling_Prateek_Guillermo.xlsx"
+dataframe = pd.read_excel(pth)
 
 def code_preprocessing(file):
     with open(file) as dataset_obj:
@@ -137,7 +142,13 @@ def vulnerable_line_finder(df):
     return file_list, file_vulnerabilities
 
 def vulnerable_line_adjustment(file_list, file_vulnerabilities):
-    os.chdir("/home/sakshmeno/Documents/GitHub/C-RNN-approach/dataset")
+    if platform.machine() == 'arm64':
+        pth = "/Users/saksh.menon/Documents/GitHub/C-RNN-approach/dataset"
+    elif platform.machine() == 'x86_64':
+        pth = "/home/sakshmeno/Documents/GitHub/C-RNN-approach/dataset"
+
+    # dataframe = pd.read_excel(pth)
+    os.chdir(pth)
     for file in file_list:
         comments = comment_finder(file)
         for vul_line in range(len(file_vulnerabilities[file])):
