@@ -5,7 +5,7 @@ import platform
 if platform.machine() == 'arm64':
     pth = "/Users/saksh.menon/Documents/GitHub/C-RNN-approach/Labels/Labelling_Prateek_Guillermo.xlsx"
 elif platform.machine() == 'x86_64':
-    pth = "/home/sakshmeno/Documents/GitHub/C-RNN-approach/Labels/Labelling_Prateek_Guillermo.xlsx"
+    pth = "/home/sakshmeno/Documents/GitHub/C-RNN-approach/Labels/Labelling_Pratek_Guillermo.xlsx"
 dataframe = pd.read_excel(pth)
 
 def code_preprocessing(file):
@@ -71,10 +71,10 @@ def code_preprocessing(file):
 
     for line_number in range(len(raw_codeLines)):
         placeHolder = raw_codeLines[line_number]
-    #     placeHolder = space_out(placeHolder, ";")
-    #     placeHolder = space_out(placeHolder, "(")
-    #     placeHolder = space_out(placeHolder, ")")
-    #     placeHolder = space_out(placeHolder, ",")
+        placeHolder = space_out(placeHolder, ";")
+        placeHolder = space_out(placeHolder, "(")
+        placeHolder = space_out(placeHolder, ")")
+        placeHolder = space_out(placeHolder, ",")
         if placeHolder.endswith(";"):
             raw_codeLines[line_number] = "<start> " + placeHolder.replace(";","<end>")
         elif not(placeHolder.endswith(";")):
@@ -184,5 +184,5 @@ def dataframe_init():
     file_list, file_vulnerabilities = vulnerable_line_finder(dataframe)
     file_vulnerabilities = vulnerable_line_adjustment(file_list, file_vulnerabilities)
     labelled_dataset = gen_df(file_list, file_vulnerabilities)
-
+    labelled_dataset['Label']=labelled_dataset['Label'].map({"Secure" : 0, "Insecure":1})
     return labelled_dataset

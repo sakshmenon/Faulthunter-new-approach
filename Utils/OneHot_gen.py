@@ -30,20 +30,21 @@ def one_hot_encode(categories, category_to_index):
 
 def vectorize_and_padd(df, gloabl_OHV_dictionary):
     for line in range(df.shape[0]):
-        df.loc[line].Lines = df.loc[line].Lines.split()
-        for element_index in range(len(df.loc[line].Lines)):
-            df.loc[line].Lines[element_index] = gloabl_OHV_dictionary[df.loc[line].Lines[element_index]]
+        df['Lines'][line] = df['Lines'][line].split()
+        for element_index in range(len(df['Lines'][line])):
+            df['Lines'][line][element_index] = gloabl_OHV_dictionary[df['Lines'][line][element_index]]
 
     max_len = 0
     for i in range(df.shape[0]):
-        if  len(df.loc[i].Lines) > max_len:
-            max_len = (len(df.loc[i].Lines))
-    for i in enumerate(df.loc[:]):
+        if  len(df['Lines'][i]) > max_len:
+            max_len = (len(df['Lines'][i]))
+    for i in enumerate(df['Lines']):
         for iter in range(0, max_len - len(i[1])):
-            df.loc[i[0]].Lines.insert(-1, gloabl_OHV_dictionary['<pad>'])
+            df['Lines'][i[0]].insert(-1, gloabl_OHV_dictionary['<pad>'])
+        df['Lines'][i[0]] = np.array(df['Lines'][i[0]])
     return df
 
-def OHV_init(self, df):
+def OHV_init(df):
     vocab, df = tokenize(df)
     global_one_hot_vectors, gloabl_OHV_dictionary = one_hot_encode(vocab.keys(), vocab)
     df = vectorize_and_padd(df, gloabl_OHV_dictionary)
