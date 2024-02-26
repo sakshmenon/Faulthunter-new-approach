@@ -5,7 +5,7 @@ import platform
 if platform.machine() == 'arm64':
     pth = "/Users/saksh.menon/Documents/GitHub/C-RNN-approach/Labels/Labelling_Prateek_Guillermo.xlsx"
 elif platform.machine() == 'x86_64':
-    pth = "/home/sakshmeno/Documents/GitHub/C-RNN-approach/Labels/Labelling_Pratek_Guillermo.xlsx"
+    pth = "/home/sakshmeno/Documents/GitHub/C-RNN-approach/Labels/Labelling_Prateek_Guillermo.xlsx"
 dataframe = pd.read_excel(pth)
 
 def code_preprocessing(file):

@@ -16,7 +16,8 @@ def line_gen(df):
     return x_tfidf
 
 
-def TFIDF_vectorize(x_tfidf, df):
+def TFIDF_init(df):
+    x_tfidf = line_gen(df)
     for vector in enumerate(x_tfidf.A):
         df['Lines'][vector[0]] = vector[1]
     return df

@@ -3,6 +3,9 @@ import string
 import re
 import platform
 import os
+import numpy as np
+from sklearn.model_selection import train_test_split
+
 
 vocab_size = 4096
 SEED = 42
@@ -29,7 +32,7 @@ def filtered_gen(df):
             fc_obj.writelines(codeLines[i])
             fc_obj.write('\n')
 
-def word2vec_vectorize(df):   
+def word2vec_init(df):   
     os.chdir(pth) 
     filtered_gen(df)
     # os.chdir(pth)
@@ -54,6 +57,29 @@ def word2vec_vectorize(df):
     inverse_vocab = vectorize_layer.get_vocabulary()
 
     for vector in enumerate(sequences):
-        df['Lines'][vector[0]] = vector[1]
+        df['Lines'][vector[0]] = np.array(vector[1]).astype(dtype="float32")
 
     return df
+
+def word2vec_vector_init(df, test_size):
+    df = word2vec_init(df)
+
+    x_vector = df['Lines']
+    y_vector = df['Label']
+
+    x_train, x_test, y_train, y_test = train_test_split(x_vector, y_vector, test_size)
+
+    tensor_x_train_proto = [list([i]) for i in (x_train)]
+    tensor_x_train_proto = tf.constant(tensor_x_train_proto, dtype=tf.float32)
+
+    tensor_x_test_proto = [list([i]) for i in (x_test)]
+    tensor_x_test_proto = tf.constant(tensor_x_test_proto, dtype=tf.float32)
+
+    tensor_y_train_proto = [list([i]) for i in (y_train)]
+    tensor_y_train_proto = tf.constant(tensor_y_train_proto, dtype=tf.float32)
+
+    tensor_y_test_proto = [list([i]) for i in (y_test)]
+    tensor_y_test_proto = tf.constant(tensor_y_test_proto, dtype=tf.float32)
+
+    return tensor_x_train_proto, tensor_x_test_proto, tensor_y_train_proto, tensor_y_test_proto
+

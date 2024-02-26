@@ -40,7 +40,7 @@ def vectorize_and_padd(df, gloabl_OHV_dictionary):
             max_len = (len(df['Lines'][i]))
     for i in enumerate(df['Lines']):
         for iter in range(0, max_len - len(i[1])):
-            df['Lines'][i[0]].insert(-1, gloabl_OHV_dictionary['<pad>'])
+            df['Lines'][i[0]].append(gloabl_OHV_dictionary['<pad>'])
         df['Lines'][i[0]] = np.array(df['Lines'][i[0]])
     return df
 
@@ -48,4 +48,4 @@ def OHV_init(df):
     vocab, df = tokenize(df)
     global_one_hot_vectors, gloabl_OHV_dictionary = one_hot_encode(vocab.keys(), vocab)
     df = vectorize_and_padd(df, gloabl_OHV_dictionary)
-    return df, global_one_hot_vectors, gloabl_OHV_dictionary
+    return df
