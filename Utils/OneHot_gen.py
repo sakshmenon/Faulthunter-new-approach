@@ -1,4 +1,6 @@
 import numpy as np
+from sklearn.model_selection import train_test_split
+import tensorflow as tf
 
 def tokenize(df):
 
@@ -44,8 +46,31 @@ def vectorize_and_padd(df, gloabl_OHV_dictionary):
         df['Lines'][i[0]] = np.array(df['Lines'][i[0]])
     return df
 
-def OHV_init(df):
+def OHE_init(df):
     vocab, df = tokenize(df)
     global_one_hot_vectors, gloabl_OHV_dictionary = one_hot_encode(vocab.keys(), vocab)
     df = vectorize_and_padd(df, gloabl_OHV_dictionary)
     return df
+
+def OHE_vector_init(df, test_size):
+    df = OHE_init(df)
+
+    x_vector = df['Lines']
+    y_vector = df['Label']
+
+    x_train, x_test, y_train, y_test = train_test_split(x_vector, y_vector, test_size)
+
+    tensor_x_train_proto = [list([i]) for i in (x_train)]
+    tensor_x_train_proto = tf.constant(tensor_x_train_proto, dtype=tf.float32)
+
+    tensor_x_test_proto = [list([i]) for i in (x_test)]
+    tensor_x_test_proto = tf.constant(tensor_x_test_proto, dtype=tf.float32)
+
+    tensor_y_train_proto = [list([i]) for i in (y_train)]
+    tensor_y_train_proto = tf.constant(tensor_y_train_proto, dtype=tf.float32)
+
+    tensor_y_test_proto = [list([i]) for i in (y_test)]
+    tensor_y_test_proto = tf.constant(tensor_y_test_proto, dtype=tf.float32)
+
+    return tensor_x_train_proto, tensor_x_test_proto, tensor_y_train_proto, tensor_y_test_proto
+

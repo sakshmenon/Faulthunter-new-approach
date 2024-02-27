@@ -61,13 +61,13 @@ def word2vec_init(df):
 
     return df
 
-def word2vec_vector_init(df, test_size):
+def word2vec_vector_init(df):
     df = word2vec_init(df)
 
     x_vector = df['Lines']
     y_vector = df['Label']
 
-    x_train, x_test, y_train, y_test = train_test_split(x_vector, y_vector, test_size)
+    x_train, x_test, y_train, y_test = train_test_split(x_vector, y_vector, test_size=0.2)
 
     tensor_x_train_proto = [list([i]) for i in (x_train)]
     tensor_x_train_proto = tf.constant(tensor_x_train_proto, dtype=tf.float32)
