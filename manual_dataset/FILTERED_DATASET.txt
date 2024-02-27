@@ -1,0 +1,17 @@
+<start> #include <stdio.h> <end>
+<start>  <end>
+<start> int main ( void )  <end>
+<start> { <end>
+<start>     int result = 1 ;  <end>
+<start>     if  ( result == 1 )  <end>
+<start>     { <end>
+<start>         printf ( "Executing critical code...\n" )  ;  <end>
+<start>     } <end>
+<start>     else <end>
+<start>     { <end>
+<start>         printf ( "Exiting out...\n" )  ;  <end>
+<start>         return 1 ;  <end>
+<start>     } <end>
+<start>  <end>
+<start>     return 0 ;  <end>
+<start> } <end>
