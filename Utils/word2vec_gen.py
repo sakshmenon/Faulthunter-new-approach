@@ -61,7 +61,7 @@ def word2vec_init(df):
 
     return df
 
-def word2vec_vector_init(df):
+def word2vec_vector_init(df, test_size):
     df = word2vec_init(df)
 
     x_vector = df['Lines']

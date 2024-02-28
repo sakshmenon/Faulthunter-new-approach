@@ -58,7 +58,7 @@ def OHE_vector_init(df, test_size):
     x_vector = df['Lines']
     y_vector = df['Label']
 
-    x_train, x_test, y_train, y_test = train_test_split(x_vector, y_vector, test_size)
+    x_train, x_test, y_train, y_test = train_test_split(x_vector, y_vector, test_size=test_size)
 
     tensor_x_train_proto = [list([i]) for i in (x_train)]
     tensor_x_train_proto = tf.constant(tensor_x_train_proto, dtype=tf.float32)
