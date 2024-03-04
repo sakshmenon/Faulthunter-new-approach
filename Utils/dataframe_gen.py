@@ -3,9 +3,9 @@ import os
 import platform
 
 if platform.machine() == 'arm64':
-    pth = "/Users/saksh.menon/Documents/GitHub/C-RNN-approach/Labels/Labelling_Prateek_Guillermo.xlsx"
+    pth = "/Users/saksh.menon/Documents/GitHub/Faulthunter-RNN-approach/Labels/Labelling_Prateek_Guillermo.xlsx"
 elif platform.machine() == 'x86_64':
-    pth = "/home/sakshmeno/Documents/GitHub/C-RNN-approach/Labels/Labelling_Prateek_Guillermo.xlsx"
+    pth = "/home/sakshmeno/Documents/GitHub/Faulthunter-RNN-approach/Labels/Labelling_Prateek_Guillermo.xlsx"
 dataframe = pd.read_excel(pth)
 
 def code_preprocessing(file):
@@ -143,9 +143,9 @@ def vulnerable_line_finder(df):
 
 def vulnerable_line_adjustment(file_list, file_vulnerabilities):
     if platform.machine() == 'arm64':
-        pth = "/Users/saksh.menon/Documents/GitHub/C-RNN-approach/dataset"
+        pth = "/Users/saksh.menon/Documents/GitHub/Faulthunter-RNN-approach/dataset"
     elif platform.machine() == 'x86_64':
-        pth = "/home/sakshmeno/Documents/GitHub/C-RNN-approach/dataset"
+        pth = "/home/sakshmeno/Documents/GitHub/Faulthunter-RNN-approach/dataset"
 
     # dataframe = pd.read_excel(pth)
     os.chdir(pth)
