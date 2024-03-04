@@ -34,26 +34,12 @@ def vec_split(df):
 
     return training_df, testing_df
 
-    x_training = pd.concat([x_train_secure, x_train_insecure])
-    x_training.sample(frac = 1)
-
-    x_testing = pd.concat([x_test_secure, x_test_insecure])
-    x_testing.sample(frac = 1)
-
-    y_training = pd.concat([y_train_secure, y_train_insecure])
-    y_training.sample(frac = 1)
-
-    y_testing = pd.concat([y_test_secure, y_test_insecure])
-    y_testing.sample(frac = 1)
-
-    return x_training, x_testing, y_training, y_testing
-
 def tensor_gen(vectors):
 
-    x_train = vectors[0]
-    x_test = vectors[1]
-    y_train = vectors[2]
-    y_test = vectors[3]
+    x_train = vectors[0]['Lines']
+    x_test = vectors[1]['Lines']
+    y_train = vectors[0]['Lable']
+    y_test = vectors[1]['Label']
 
     tensor_x_train_proto = [i for i in (x_train)]
     tensor_x_train_proto = tf.constant(tensor_x_train_proto, dtype=tf.float32)
