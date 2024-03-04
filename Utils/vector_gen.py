@@ -38,7 +38,7 @@ def tensor_gen(vectors):
 
     x_train = vectors[0]['Lines']
     x_test = vectors[1]['Lines']
-    y_train = vectors[0]['Lable']
+    y_train = vectors[0]['Label']
     y_test = vectors[1]['Label']
 
     tensor_x_train_proto = [i for i in (x_train)]
