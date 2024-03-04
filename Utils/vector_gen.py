@@ -1,6 +1,7 @@
 from sklearn.model_selection import train_test_split
 import pandas as pd
 import tensorflow as tf
+import numpy as np
 
 def vec_split(df):
     secure_vector = []
@@ -17,6 +18,21 @@ def vec_split(df):
 
     x_train_secure, x_test_secure, y_train_secure, y_test_secure = train_test_split(secure_df['Lines'], secure_df['Label'], random_state=32, test_size = 0.2)
     x_train_insecure, x_test_insecure, y_train_insecure, y_test_insecure = train_test_split(insecure_df['Lines'], insecure_df['Label'], random_state=32, test_size = 0.2)
+
+    #80%
+    training_df = pd.DataFrame({'Lines':x_train_secure,'Label':y_train_secure})
+    rand_idx = np.random.randint(0, len(training_df), size=len(x_train_insecure))
+    for i in enumerate(rand_idx):
+        new_row = pd.DataFrame({'Lines':[list(x_train_insecure)[i[0]]],'Label':[list(y_train_insecure)[i[0]]]})
+        training_df = pd.concat([training_df.iloc[:i[1]], new_row, df.iloc[i[1]:]], ignore_index=True)
+
+    testing_df = pd.DataFrame({'Lines':x_test_secure,'Label':y_test_secure})
+    rand_idx = np.random.randint(0, len(testing_df), size=len(x_test_insecure))
+    for i in enumerate(rand_idx):
+        new_row = pd.DataFrame({'Lines':[list(x_test_insecure)[i[0]]],'Label':[list(y_test_insecure)[i[0]]]})
+        testing_df = pd.concat([testing_df.iloc[:i[1]], new_row, df.iloc[i[1]:]], ignore_index=True)
+
+    return training_df, testing_df
 
     x_training = pd.concat([x_train_secure, x_train_insecure])
     x_training.sample(frac = 1)
