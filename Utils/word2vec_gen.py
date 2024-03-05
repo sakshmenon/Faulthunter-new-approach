@@ -11,10 +11,16 @@ vocab_size = 4096
 SEED = 42
 AUTOTUNE = tf.data.AUTOTUNE
 
-if platform.machine() == 'arm64':
-    pth = "/Users/saksh.menon/Documents/GitHub/C-RNN-approach/Labels"
-elif platform.machine() == 'x86_64':
-    pth = "/home/sakshmeno/Documents/GitHub/C-RNN-approach/Labels"
+def path_changes(gpu_token):
+    if platform.machine() == 'arm64':
+        pth = "/Users/saksh.menon/Documents/GitHub/C-RNN-approach/Labels"
+    elif platform.machine() == 'x86_64':
+        if gpu_token:
+            pth = "/home/ucdasec/Faulthunter-RNN-approach/Labels"
+        else:
+            pth = "/home/sakshmeno/Documents/GitHub/C-RNN-approach/Labels"
+
+    return pth
 
 def pad_init(df):
     max_len = 0
@@ -32,7 +38,8 @@ def filtered_gen(df):
             fc_obj.writelines(codeLines[i])
             fc_obj.write('\n')
 
-def word2vec_init(df):   
+def word2vec_init(df, gpu_token):  
+    pth = path_changes(gpu_token) 
     os.chdir(pth) 
     filtered_gen(df)
     # os.chdir(pth)
