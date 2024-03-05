@@ -2,11 +2,16 @@ import pandas as pd
 import os
 import platform
 
-if platform.machine() == 'arm64':
-    pth = "/Users/saksh.menon/Documents/GitHub/C-RNN-approach/Labels/Labelling_Prateek_Guillermo.xlsx"
-elif platform.machine() == 'x86_64':
-    pth = "/home/sakshmeno/Documents/GitHub/C-RNN-approach/Labels/Labelling_Prateek_Guillermo.xlsx"
-dataframe = pd.read_excel(pth)
+def path_changes(gpu_token):
+    if platform.machine() == 'arm64':
+        pth = "/Users/saksh.menon/Documents/GitHub/C-RNN-approach/Labels/Labelling_Prateek_Guillermo.xlsx"
+    elif platform.machine() == 'x86_64':
+        if gpu_token:
+            pth = "/home/ucdasec/Faulthunter-RNN-approach/Labels/Labelling_Prateek_Guillermo.xlsx"
+        else:
+            pth = "/home/sakshmeno/Documents/GitHub/C-RNN-approach/Labels/Labelling_Prateek_Guillermo.xlsx"
+    dataframe = pd.read_excel(pth)
+    return dataframe
 
 def code_preprocessing(file):
     with open(file) as dataset_obj:
@@ -141,13 +146,16 @@ def vulnerable_line_finder(df):
     file_list = file_list[:-1]
     return file_list, file_vulnerabilities
 
-def vulnerable_line_adjustment(file_list, file_vulnerabilities):
+def vulnerable_line_adjustment(file_list, file_vulnerabilities, gpu_token):
+
     if platform.machine() == 'arm64':
         pth = "/Users/saksh.menon/Documents/GitHub/C-RNN-approach/dataset"
     elif platform.machine() == 'x86_64':
-        pth = "/home/sakshmeno/Documents/GitHub/C-RNN-approach/dataset"
+        if gpu_token:
+            pth = "/home/ucdasec/Faulthunter-RNN-approach/dataset"
+        else:
+            pth = "/home/sakshmeno/Documents/GitHub/C-RNN-approach/dataset"
 
-    # dataframe = pd.read_excel(pth)
     os.chdir(pth)
     for file in file_list:
         comments = comment_finder(file)
@@ -180,9 +188,10 @@ def gen_df(file_list, file_vulnerabilities):
 
     return labeled_dataset
 
-def dataframe_init():
+def dataframe_init(gpu_token):
+    dataframe = path_changes(gpu_token)
     file_list, file_vulnerabilities = vulnerable_line_finder(dataframe)
-    file_vulnerabilities = vulnerable_line_adjustment(file_list, file_vulnerabilities)
+    file_vulnerabilities = vulnerable_line_adjustment(file_list, file_vulnerabilities, gpu_token)
     labelled_dataset = gen_df(file_list, file_vulnerabilities)
     labelled_dataset['Label']=labelled_dataset['Label'].map({"Secure" : [1, 0], "Insecure":[0, 1]})
     return labelled_dataset
