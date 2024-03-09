@@ -63,6 +63,8 @@ def word2vec_init(df, gpu_token):
     sequences = list(text_vector_ds.as_numpy_iterator())
     inverse_vocab = vectorize_layer.get_vocabulary()
 
+    df['Encoded Lines'] = df['Lines']
+
     for vector in enumerate(sequences):
         df['Encoded Lines'][vector[0]] = np.array(vector[1]).astype(dtype="float32")
         
