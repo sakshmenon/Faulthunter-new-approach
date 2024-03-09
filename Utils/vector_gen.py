@@ -32,8 +32,8 @@ def vec_split(df):
         new_row = pd.DataFrame({'Lines':[list(x_test_insecure)[i[0]]],'Label':[list(y_test_insecure)[i[0]]]})
         testing_df = pd.concat([testing_df.iloc[:i[1]], new_row, testing_df.iloc[i[1]:]], ignore_index=True)
 
-    training_df['Encoded Lines'] = training_df['Lines']
-    testing_df['Encoded Lines'] = testing_df['Lines']
+    # training_df['Encoded Lines'] = training_df['Lines']
+    # testing_df['Encoded Lines'] = testing_df['Lines']
 
     return training_df, testing_df
 
