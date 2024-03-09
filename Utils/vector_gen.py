@@ -39,10 +39,6 @@ def vec_split(df):
 
 def tensor_gen(vectors):
 
-    # vectors[0]['Tensors'] = vectors[0]['Encoded Lines']
-    # vectors[1]['Tensors'] = vectors[1]['Encoded Lines']
-
-
     x_train = vectors[0]['Encoded Lines']
     x_test = vectors[1]['Encoded Lines']
     y_train = vectors[0]['Label']
@@ -50,8 +46,6 @@ def tensor_gen(vectors):
 
     tensor_x_train_proto = [i for i in (x_train)]
     tensor_x_train_proto = tf.constant(tensor_x_train_proto, dtype=tf.float32)
-
-    # vectors[0]['Tensors'] = tensor_x_train_proto
 
     tensor_x_test_proto = [i for i in (x_test)]
     tensor_x_test_proto = tf.constant(tensor_x_test_proto, dtype=tf.float32)
