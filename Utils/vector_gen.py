@@ -24,28 +24,39 @@ def vec_split(df):
     rand_idx = np.random.randint(0, len(training_df), size=len(x_train_insecure))
     for i in enumerate(rand_idx):
         new_row = pd.DataFrame({'Lines':[list(x_train_insecure)[i[0]]],'Label':[list(y_train_insecure)[i[0]]]})
-        training_df = pd.concat([training_df.iloc[:i[1]], new_row, df.iloc[i[1]:]], ignore_index=True)
+        training_df = pd.concat([training_df.iloc[:i[1]], new_row, training_df.iloc[i[1]:]], ignore_index=True)
 
     testing_df = pd.DataFrame({'Lines':x_test_secure,'Label':y_test_secure})
     rand_idx = np.random.randint(0, len(testing_df), size=len(x_test_insecure))
     for i in enumerate(rand_idx):
         new_row = pd.DataFrame({'Lines':[list(x_test_insecure)[i[0]]],'Label':[list(y_test_insecure)[i[0]]]})
-        testing_df = pd.concat([testing_df.iloc[:i[1]], new_row, df.iloc[i[1]:]], ignore_index=True)
+        testing_df = pd.concat([testing_df.iloc[:i[1]], new_row, testing_df.iloc[i[1]:]], ignore_index=True)
+
+    training_df['Encoded Lines'] = training_df['Lines']
+    testing_df['Encoded Lines'] = testing_df['Lines']
 
     return training_df, testing_df
 
 def tensor_gen(vectors):
 
-    x_train = vectors[0]['Lines']
-    x_test = vectors[1]['Lines']
+    # vectors[0]['Tensors'] = vectors[0]['Encoded Lines']
+    # vectors[1]['Tensors'] = vectors[1]['Encoded Lines']
+
+
+    x_train = vectors[0]['Encoded Lines']
+    x_test = vectors[1]['Encoded Lines']
     y_train = vectors[0]['Label']
     y_test = vectors[1]['Label']
 
     tensor_x_train_proto = [i for i in (x_train)]
     tensor_x_train_proto = tf.constant(tensor_x_train_proto, dtype=tf.float32)
 
+    # vectors[0]['Tensors'] = tensor_x_train_proto
+
     tensor_x_test_proto = [i for i in (x_test)]
     tensor_x_test_proto = tf.constant(tensor_x_test_proto, dtype=tf.float32)
+
+    # vectors[1]['Tensors'] = tensor_x_test_proto
 
     tensor_y_train_proto = [i for i in (y_train)]
     tensor_y_train_proto = tf.constant(tensor_y_train_proto, dtype=tf.float32)
