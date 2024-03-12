@@ -38,11 +38,11 @@ def filtered_gen(df):
             fc_obj.writelines(codeLines[i])
             fc_obj.write('\n')
 
-def word2vec_init(df, gpu_token):  
+def word2vec_init(original_df, vectors, gpu_token):  
     pth = path_changes(gpu_token) 
     os.chdir(pth) 
-    filtered_gen(df)
-    # os.chdir(pth)
+    filtered_gen(original_df)
+
     text_ds = tf.data.TextLineDataset(pth + "/FILTERED_CODE.txt").filter(lambda x: tf.cast(tf.strings.length(x), bool))
 
     def custom_standardization(input_data):
@@ -50,7 +50,7 @@ def word2vec_init(df, gpu_token):
 
         return tf.strings.regex_replace(lowercase,
                                         '[%s]' % re.escape(string.punctuation), '')
-    sequence_length = pad_init(df)
+    sequence_length = pad_init(original_df)
     vectorize_layer = tf.keras.layers.TextVectorization(
         standardize=custom_standardization,
         max_tokens=vocab_size,
@@ -63,9 +63,8 @@ def word2vec_init(df, gpu_token):
     sequences = list(text_vector_ds.as_numpy_iterator())
     inverse_vocab = vectorize_layer.get_vocabulary()
 
-    df['Encoded Lines'] = df['Lines']
-
-    for vector in enumerate(sequences):
-        df['Encoded Lines'][vector[0]] = np.array(vector[1]).astype(dtype="float32")
-        
-    return df
+    for i in range(2):
+        for vector in enumerate(sequences):
+            vectors[i]['Encoded Lines'][vector[0]] = np.array(vector[1]).astype(dtype="float32")
+            
+    return vectors

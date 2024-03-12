@@ -16,20 +16,24 @@ def vec_split(df):
     secure_df = pd.DataFrame(secure_vector)
     insecure_df = pd.DataFrame(insecure_vector)
 
-    x_train_secure, x_test_secure, y_train_secure, y_test_secure = train_test_split(secure_df['Lines'], secure_df['Label'], random_state=32, test_size = 0.2)
-    x_train_insecure, x_test_insecure, y_train_insecure, y_test_insecure = train_test_split(insecure_df['Lines'], insecure_df['Label'], random_state=32, test_size = 0.2)
+    # return secure_df, insecure_df
+    
+    x_train_secure, x_test_secure, y_train_secure, y_test_secure = train_test_split(secure_df.index.tolist(), secure_df['Label'], random_state=32, test_size = 0.2)
+    x_train_insecure, x_test_insecure, y_train_insecure, y_test_insecure = train_test_split(insecure_df.index.tolist(), insecure_df['Label'], random_state=32, test_size = 0.2)
 
     #80%
-    training_df = pd.DataFrame({'Lines':x_train_secure,'Label':y_train_secure})
+    tester = [{'Lines' : secure_df.Lines[i], 'Encoded Lines' : secure_df.Lines[i], 'Label': secure_df.Label[i]} for i in x_train_secure]
+    training_df = pd.DataFrame(tester)
     rand_idx = np.random.randint(0, len(training_df), size=len(x_train_insecure))
     for i in enumerate(rand_idx):
-        new_row = pd.DataFrame({'Lines':[list(x_train_insecure)[i[0]]],'Label':[list(y_train_insecure)[i[0]]]})
+        new_row = pd.DataFrame({'Lines':[list(x_train_insecure)[i[0]]],'Encoded Lines' : [list(x_train_insecure)[i[0]]],'Label':[list(y_train_insecure)[i[0]]]})
         training_df = pd.concat([training_df.iloc[:i[1]], new_row, training_df.iloc[i[1]:]], ignore_index=True)
 
-    testing_df = pd.DataFrame({'Lines':x_test_secure,'Label':y_test_secure})
+    tester = [{'Lines' : secure_df.Lines[i], 'Encoded Lines' : secure_df.Lines[i], 'Label': secure_df.Label[i]} for i in x_test_secure]
+    testing_df = pd.DataFrame(tester)
     rand_idx = np.random.randint(0, len(testing_df), size=len(x_test_insecure))
     for i in enumerate(rand_idx):
-        new_row = pd.DataFrame({'Lines':[list(x_test_insecure)[i[0]]],'Label':[list(y_test_insecure)[i[0]]]})
+        new_row = pd.DataFrame({'Lines':[list(x_test_insecure)[i[0]]],'Encoded Lines':[list(x_test_insecure)[i[0]]],'Label':[list(y_test_insecure)[i[0]]]})
         testing_df = pd.concat([testing_df.iloc[:i[1]], new_row, testing_df.iloc[i[1]:]], ignore_index=True)
 
     # training_df['Encoded Lines'] = training_df['Lines']
