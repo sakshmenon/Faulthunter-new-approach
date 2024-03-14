@@ -44,3 +44,4 @@ def score_summary(pred, outputs, label):
     print('precision score: ', precision(true_positives, false_positives))
     print('recall score: ', recall(true_positives, false_negetives))
     print()
+    
