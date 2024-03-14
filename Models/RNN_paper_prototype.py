@@ -16,5 +16,5 @@ def model_init(input_shape):
     model.add(layers.Dense(2, activation = keras.activations.softmax))
 
     model.compile(optimizer=keras.optimizers.legacy.Adam(learning_rate=0.0001), loss=keras.losses.BinaryFocalCrossentropy(apply_class_balancing=True,gamma=2),
-                metrics=["accuracy"], )
+                metrics=["accuracy"], run_eagerly=True)
     return model
