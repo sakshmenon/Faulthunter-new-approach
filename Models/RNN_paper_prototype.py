@@ -31,7 +31,7 @@ def model_ver_1_(input_shape):
     model.add(layers.Dense(1024, activation=keras.activations.relu))#, kernel_regularizer=keras.regularizers.l2(0.01)))        
     model.add(layers.Dense(2, activation = keras.activations.softmax))
 
-    model.compile(optimizer=keras.optimizers.legacy.SDG(learning_rate=0.01), loss=keras.losses.BinaryCrossentropy,
+    model.compile(optimizer=keras.optimizers.SDG(learning_rate=0.01), loss=keras.losses.BinaryCrossentropy,
                 metrics=["accuracy"], run_eagerly=True)
     return model
 
