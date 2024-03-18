@@ -19,7 +19,7 @@ def vec_split(df):
     # return secure_df, insecure_df
     
     x_train_secure, x_test_secure, y_train_secure, y_test_secure = train_test_split(secure_df.index.tolist(), secure_df['Label'], random_state=32, test_size = 0.2)
-    x_train_secure, x_val_secure, y_train_secure, y_val_secure = train_test_split(secure_df.index.tolist(), secure_df['Label'], random_state=32, test_size = (1/8))
+    x_train_secure, x_val_secure, y_train_secure, y_val_secure = train_test_split(x_train_secure, secure_df['Label'][0:len(x_train_secure)], random_state=32, test_size = (1/8))
     x_train_insecure, x_test_insecure, y_train_insecure, y_test_insecure = train_test_split(insecure_df.index.tolist(), insecure_df['Label'], random_state=32, test_size = 0.2)
 
     #80%
