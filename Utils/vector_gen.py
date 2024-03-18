@@ -19,6 +19,7 @@ def vec_split(df):
     # return secure_df, insecure_df
     
     x_train_secure, x_test_secure, y_train_secure, y_test_secure = train_test_split(secure_df.index.tolist(), secure_df['Label'], random_state=32, test_size = 0.2)
+    x_train_secure, x_val_secure, y_train_secure, y_val_secure = train_test_split(secure_df.index.tolist(), secure_df['Label'], random_state=32, test_size = (1/8))
     x_train_insecure, x_test_insecure, y_train_insecure, y_test_insecure = train_test_split(insecure_df.index.tolist(), insecure_df['Label'], random_state=32, test_size = 0.2)
 
     #80%
@@ -28,6 +29,9 @@ def vec_split(df):
     for i in enumerate(rand_idx):
         new_row = pd.DataFrame({'Lines':[list(x_train_insecure)[i[0]]],'Encoded Lines' : [list(x_train_insecure)[i[0]]],'Label':[list(y_train_insecure)[i[0]]]})
         training_df = pd.concat([training_df.iloc[:i[1]], new_row, training_df.iloc[i[1]:]], ignore_index=True)
+    
+    tester = [{'Lines' : secure_df.Lines[i], 'Encoded Lines' : secure_df.Lines[i], 'Label': secure_df.Label[i]} for i in x_val_secure]
+    validation_df = pd.DataFrame(tester)
 
     tester = [{'Lines' : secure_df.Lines[i], 'Encoded Lines' : secure_df.Lines[i], 'Label': secure_df.Label[i]} for i in x_test_secure]
     testing_df = pd.DataFrame(tester)
@@ -39,7 +43,7 @@ def vec_split(df):
     # training_df['Encoded Lines'] = training_df['Lines']
     # testing_df['Encoded Lines'] = testing_df['Lines']
 
-    return training_df, testing_df
+    return training_df, validation_df, testing_df
 
 def tensor_gen(vectors):
 
