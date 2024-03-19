@@ -15,7 +15,7 @@ def model_ver_0(input_shape):
     model.add(layers.Dense(1024, activation=keras.activations.relu, kernel_regularizer=keras.regularizers.l2(0.01)))        
     model.add(layers.Dense(2, activation = keras.activations.softmax))
 
-    model.compile(optimizer=keras.optimizers.legacy.Adam(learning_rate=0.0001), loss=keras.losses.BinaryCrossentropy,
+    model.compile(optimizer=keras.optimizers.legacy.Adam(learning_rate=0.0001), loss=keras.losses.binary_crossentropy,
                 metrics=["accuracy"], run_eagerly=True)
     return model
 
