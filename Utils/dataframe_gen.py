@@ -193,5 +193,5 @@ def dataframe_init(gpu_token):
     file_list, file_vulnerabilities = vulnerable_line_finder(dataframe)
     file_vulnerabilities = vulnerable_line_adjustment(file_list, file_vulnerabilities, gpu_token)
     labelled_dataset = gen_df(file_list, file_vulnerabilities)
-    # labelled_dataset['Label']=labelled_dataset['Label'].map({"Secure" : [1, 0], "Insecure":[0, 1]})
+    # labelled_dataset['Label']=labelled_dataset['Label'].map({"Secure" : [0], "Insecure":[1]})
     return labelled_dataset

@@ -8,7 +8,7 @@ def vec_split(df):
     insecure_vector = []
 
     for label in enumerate(df['Label']):
-        if label[1] == [0,1]:
+        if label[1] == [1]:
             insecure_vector.append(df.loc[label[0]])
         else:
             secure_vector.append(df.loc[label[0]])
@@ -43,6 +43,10 @@ def vec_split(df):
     return training_df, validation_df, testing_df
 
 def tensor_gen(vectors):
+
+    for i in vectors:
+        i['Label']=i['Label'].map({[0] : [1, 0], [1]:[0, 1]})
+
 
     x_train = vectors[0]['Encoded Lines']
     x_val = vectors[1]['Encoded Lines']
