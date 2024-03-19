@@ -16,7 +16,7 @@ def tokenize(df):
             if token not in vocab:
                 vocab[token] = index
                 index += 1
-    return vocab, df
+    return vocab
 
 def vectorize_and_padd(df, gloabl_OHV_dictionary):
     for line in range(df.shape[0]):
