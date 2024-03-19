@@ -27,7 +27,7 @@ def vec_split(df):
     training_df = pd.DataFrame(tester)
     rand_idx = np.random.randint(0, len(training_df), size=len(x_train_insecure))
     for i in enumerate(rand_idx):
-        new_row = pd.DataFrame({'Lines':[list(x_train_insecure)[i[0]]],'Encoded Lines' : [list(x_train_insecure)[i[0]]],'Label':[list(y_train_insecure)[i[0]]]})
+        new_row = pd.DataFrame({'Lines':insecure_df['Lines'][list(x_train_insecure)[i[0]]],'Encoded Lines' : insecure_df['Lines'][list(x_train_insecure)[i[0]]],'Label':insecure_df['Label'][list(y_train_insecure)[i[0]]]})
         training_df = pd.concat([training_df.iloc[:i[1]], new_row, training_df.iloc[i[1]:]], ignore_index=True)
     
     tester = [{'Lines' : secure_df.Lines[i], 'Encoded Lines' : secure_df.Lines[i], 'Label': secure_df.Label[i]} for i in x_val_secure]
@@ -37,7 +37,7 @@ def vec_split(df):
     testing_df = pd.DataFrame(tester)
     rand_idx = np.random.randint(0, len(testing_df), size=len(x_test_insecure))
     for i in enumerate(rand_idx):
-        new_row = pd.DataFrame({'Lines':[list(x_test_insecure)[i[0]]],'Encoded Lines':[list(x_test_insecure)[i[0]]],'Label':[list(y_test_insecure)[i[0]]]})
+        new_row = pd.DataFrame({'Lines':insecure_df['Lines'][list(x_test_insecure)[i[0]]],'Encoded Lines':insecure_df['Lines'][list(x_test_insecure)[i[0]]],'Label':insecure_df['Label'][list(y_test_insecure)[i[0]]]})
         testing_df = pd.concat([testing_df.iloc[:i[1]], new_row, testing_df.iloc[i[1]:]], ignore_index=True)
 
     # training_df['Encoded Lines'] = training_df['Lines']
