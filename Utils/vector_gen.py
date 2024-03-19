@@ -8,7 +8,7 @@ def vec_split(df):
     insecure_vector = []
 
     for label in enumerate(df['Label']):
-        if label[1] == [1]:
+        if label[1] == 'Insecure':
             insecure_vector.append(df.loc[label[0]])
         else:
             secure_vector.append(df.loc[label[0]])
