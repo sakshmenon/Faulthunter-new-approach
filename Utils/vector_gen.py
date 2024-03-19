@@ -8,7 +8,7 @@ def vec_split(df):
     insecure_vector = []
 
     for label in enumerate(df['Label']):
-        if label[1] == 'Insecure':
+        if label[1] == 1:
             insecure_vector.append(df.loc[label[0]])
         else:
             secure_vector.append(df.loc[label[0]])
@@ -27,7 +27,7 @@ def vec_split(df):
     training_df = pd.DataFrame(tester)
     rand_idx = np.random.randint(0, len(training_df), size=len(x_train_insecure))
     for i in enumerate(rand_idx):
-        new_row = pd.DataFrame({'Lines':insecure_df['Lines'][x_train_insecure[i[0]]],'Encoded Lines' : insecure_df['Lines'][x_train_insecure[i[0]]],'Label':insecure_df['Label'][x_train_insecure[i[0]]]})
+        new_row = pd.DataFrame({'Lines':insecure_df['Lines'][x_train_insecure[i[0]]],'Encoded Lines' : insecure_df['Lines'][x_train_insecure[i[0]]],'Label':[insecure_df['Label'][x_train_insecure[i[0]]]]})
         training_df = pd.concat([training_df.iloc[:i[1]], new_row, training_df.iloc[i[1]:]], ignore_index=True)
     
     tester = [{'Lines' : secure_df.Lines[i], 'Encoded Lines' : secure_df.Lines[i], 'Label': secure_df.Label[i]} for i in x_val_secure]
@@ -37,7 +37,7 @@ def vec_split(df):
     testing_df = pd.DataFrame(tester)
     rand_idx = np.random.randint(0, len(testing_df), size=len(x_test_insecure))
     for i in enumerate(rand_idx):
-        new_row = pd.DataFrame({'Lines':insecure_df['Lines'][x_test_insecure[i[0]]],'Encoded Lines':insecure_df['Lines'][x_test_insecure[i[0]]],'Label':insecure_df['Label'][x_test_insecure[i[0]]]})
+        new_row = pd.DataFrame({'Lines':insecure_df['Lines'][x_test_insecure[i[0]]],'Encoded Lines':insecure_df['Lines'][x_test_insecure[i[0]]],'Label':[insecure_df['Label'][x_test_insecure[i[0]]]]})
         testing_df = pd.concat([testing_df.iloc[:i[1]], new_row, testing_df.iloc[i[1]:]], ignore_index=True)
 
     return training_df, validation_df, testing_df
@@ -45,7 +45,7 @@ def vec_split(df):
 def tensor_gen(vectors):
 
     for i in vectors:
-        i['Label']=i['Label'].map({[0] : [1, 0], [1]:[0, 1]})
+        i['Label']=i['Label'].map({0 : [1, 0], 1:[0, 1]})
 
 
     x_train = vectors[0]['Encoded Lines']
