@@ -34,15 +34,9 @@ def vectorize_and_padd(df, gloabl_OHV_dictionary):
         df['Lines'][i[0]] = np.array(df['Lines'][i[0]])
     return df
 
-def vectorize(vocab, df):
-    for i in len(df['Lines']):
-        i.split()
-
-def OHE_init(df):
-    vocab, df = tokenize(df)
-    global_one_hot_vectors, gloabl_OHV_dictionary = one_hot_encode(vocab.keys(), vocab)
-    df = vectorize_and_padd(df, gloabl_OHV_dictionary)
-    return df
-
-def word2vec_ver2_init(df):
-    vocab, df = tokenize(df)
+def word2vec_ver2_init(vectors, original_df):
+    vocab = tokenize(original_df)
+    for vector in vectors:
+        for i in enumerate(vector['Lines']):
+            vector['Encoded Lines'][i[0]] = [vocab[j] for j in i[1].split()]
+    return vectors
