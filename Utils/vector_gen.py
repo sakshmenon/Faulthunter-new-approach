@@ -16,6 +16,11 @@ def vec_split(df):
     secure_df = pd.DataFrame(secure_vector)
     insecure_df = pd.DataFrame(insecure_vector)
 
+    # rand_idx = np.random.randint(0, len(secure_df), size=1000)
+    # for i in rand_idx:
+    #     secure_df.drop([i])
+    # secure_df.reset_index(drop = True)
+
     # return secure_df, insecure_df
     
     x_train_secure, x_test_secure, y_train_secure, y_test_secure = train_test_split(secure_df.index.tolist(), secure_df['Label'], random_state=32, test_size = 0.2)
