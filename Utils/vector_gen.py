@@ -16,13 +16,14 @@ def vec_split(df):
     secure_df = pd.DataFrame(secure_vector)
     insecure_df = pd.DataFrame(insecure_vector)
 
-    # rand_idx = np.random.randint(0, len(secure_df), size=1000)
-    # for i in rand_idx:
-    #     secure_df.drop([i])
-    # secure_df.reset_index(drop = True)
-
     # return secure_df, insecure_df
     
+    secure_df.reset_index(drop=True, inplace=True)
+    rand_idx = np.random.choice(np.arange(0, len(secure_df)), size=1000, replace=False)
+    for i in rand_idx:
+        secure_df.drop([i],inplace=True)
+    secure_df.reset_index(drop = True, inplace=True)
+
     x_train_secure, x_test_secure, y_train_secure, y_test_secure = train_test_split(secure_df.index.tolist(), secure_df['Label'], random_state=32, test_size = 0.2)
     x_train_secure, x_val_secure, y_train_secure, y_val_secure = train_test_split(x_train_secure, secure_df['Label'][0:len(x_train_secure)], random_state=32, test_size = (1/8))
     x_train_insecure, x_test_insecure, y_train_insecure, y_test_insecure = train_test_split(insecure_df.index.tolist(), insecure_df['Label'], random_state=32, test_size = 0.2)
@@ -31,21 +32,22 @@ def vec_split(df):
     #80%
     tester = [{'Lines' : secure_df.Lines[i], 'Encoded Lines' : secure_df.Lines[i], 'Label': secure_df.Label[i]} for i in x_train_secure]
     training_df = pd.DataFrame(tester)
-    rand_idx = np.random.randint(0, len(training_df), size=len(x_train_insecure))
+    rand_idx = np.random.choice(np.arange(0, len(training_df)), size=len(x_train_insecure), replace=False)
+
     for i in enumerate(rand_idx):
         new_row = pd.DataFrame({'Lines':insecure_df['Lines'][x_train_insecure[i[0]]],'Encoded Lines' : insecure_df['Lines'][x_train_insecure[i[0]]],'Label':[insecure_df['Label'][x_train_insecure[i[0]]]]})
         training_df = pd.concat([training_df.iloc[:i[1]], new_row, training_df.iloc[i[1]:]], ignore_index=True)
     
     tester = [{'Lines' : secure_df.Lines[i], 'Encoded Lines' : secure_df.Lines[i], 'Label': secure_df.Label[i]} for i in x_val_secure]
     validation_df = pd.DataFrame(tester)
-    rand_idx = np.random.randint(0, len(validation_df), size=len(x_val_insecure))
+    rand_idx = np.random.choice(np.arange(0, len(validation_df)), size=len(x_val_insecure), replace=False)
     for i in enumerate(rand_idx):
         new_row = pd.DataFrame({'Lines':insecure_df['Lines'][x_val_insecure[i[0]]],'Encoded Lines' : insecure_df['Lines'][x_val_insecure[i[0]]],'Label':[insecure_df['Label'][x_val_insecure[i[0]]]]})
         validation_df = pd.concat([validation_df.iloc[:i[1]], new_row, validation_df.iloc[i[1]:]], ignore_index=True)
 
     tester = [{'Lines' : secure_df.Lines[i], 'Encoded Lines' : secure_df.Lines[i], 'Label': secure_df.Label[i]} for i in x_test_secure]
     testing_df = pd.DataFrame(tester)
-    rand_idx = np.random.randint(0, len(testing_df), size=len(x_test_insecure))
+    rand_idx = np.random.choice(np.arange(0, len(testing_df)), size=len(x_test_insecure), replace=False)
     for i in enumerate(rand_idx):
         new_row = pd.DataFrame({'Lines':insecure_df['Lines'][x_test_insecure[i[0]]],'Encoded Lines':insecure_df['Lines'][x_test_insecure[i[0]]],'Label':[insecure_df['Label'][x_test_insecure[i[0]]]]})
         testing_df = pd.concat([testing_df.iloc[:i[1]], new_row, testing_df.iloc[i[1]:]], ignore_index=True)
