@@ -196,3 +196,5 @@ def dataframe_init(gpu_token):
     labelled_dataset = gen_df(file_list, file_vulnerabilities)
     labelled_dataset['Label']=labelled_dataset['Label'].map({"Secure" : 0, "Insecure": 1})
     return labelled_dataset
+
+dataframe_init(1)
