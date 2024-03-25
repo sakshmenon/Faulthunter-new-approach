@@ -171,18 +171,19 @@ def vulnerable_line_adjustment(file_list, file_vulnerabilities, gpu_token):
     return file_vulnerabilities
 
 def gen_df(file_list, file_vulnerabilities):
-    labeled_dataset = {'Lines':[], 'Label':[]}
+    labeled_dataset = {'Line Number':[], 'Lines':[], 'Label':[]}
     labeled_dataset = pd.DataFrame(labeled_dataset)
     labeled_dataset
-
+    LINE_NUMBER = 0
     for file in file_list:
         code = code_preprocessing(file)
         for line in range(len(code)):
             if (line) in file_vulnerabilities[file]:
-                data = {'Lines': code[line], 'Label': 'Insecure'}
+                data = {'Line Number': LINE_NUMBER, 'Lines': code[line], 'Label': 'Insecure'}
             else:
-                data = {'Lines': code[line], 'Label': 'Secure'}
+                data = {'Line Number': LINE_NUMBER, 'Lines': code[line], 'Label': 'Secure'}
             labeled_dataset.loc[len(labeled_dataset)] = data
+            LINE_NUMBER+=1
 
     raw_code = list(labeled_dataset['Lines'])
 
