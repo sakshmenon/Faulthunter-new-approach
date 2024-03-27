@@ -3,9 +3,9 @@
 int main(void)
 {
     int result = 1;
-    if (result == 1)
+    if (result > 1)
     {
-        if (result == 1) {
+        if (result < 3) {
             printf("Executing critical code...\n");
         }
     }
