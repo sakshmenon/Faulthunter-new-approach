@@ -18,29 +18,29 @@ def code_preprocessing(file):
         codeLines = dataset_obj.read()
     comment_lines = []
     raw_codeLines = codeLines.replace("\t","").split("\n")
-    raw_codeLines = [[i, raw_codeLines[i]] for i in range(len(codeLines))]
+    raw_codeLines = [[i, raw_codeLines[i]] for i in range(len(raw_codeLines))]
     multi_line_flag = 0
     for line_number in range(len(raw_codeLines)):
         if multi_line_flag:
-            if raw_codeLines[line_number].__contains__("*/"):
+            if raw_codeLines[line_number][1].__contains__("*/"):
                 multi_line_flag = 0
             comment_lines.append(line_number)
-        elif raw_codeLines[line_number].__contains__("/*"):
-            if raw_codeLines[line_number].startswith("/*") and not(raw_codeLines[line_number].__contains__("*/")):
+        elif raw_codeLines[line_number][1].__contains__("/*"):
+            if raw_codeLines[line_number][1].startswith("/*") and not(raw_codeLines[line_number][1].__contains__("*/")):
                 comment_lines.append(line_number)
                 multi_line_flag = 1
-            elif raw_codeLines[line_number].__contains__("/*") and not(raw_codeLines[line_number].startswith("/*")):
-                if raw_codeLines[line_number].__contains__("*/"):
-                    psuedo_multi_line_start = raw_codeLines[line_number].find("/*")
-                    psuedo_multi_line_end = raw_codeLines[line_number].find("*/")
-                    temporary_line = raw_codeLines[line_number][:psuedo_multi_line_start] + raw_codeLines[line_number][psuedo_multi_line_end+2:]
-                    raw_codeLines[line_number] = temporary_line
+            elif raw_codeLines[line_number][1].__contains__("/*") and not(raw_codeLines[line_number][1].startswith("/*")):
+                if raw_codeLines[line_number][1].__contains__("*/"):
+                    psuedo_multi_line_start = raw_codeLines[line_number][1].find("/*")
+                    psuedo_multi_line_end = raw_codeLines[line_number][1].find("*/")
+                    temporary_line = raw_codeLines[line_number][1][:psuedo_multi_line_start] + raw_codeLines[line_number][1][psuedo_multi_line_end+2:]
+                    raw_codeLines[line_number][1] = temporary_line
 
-        elif raw_codeLines[line_number].startswith("//"):
+        elif raw_codeLines[line_number][1].startswith("//"):
             comment_lines.append(line_number)
-        elif raw_codeLines[line_number].__contains__("//"):
-            comment_start = raw_codeLines[line_number].find('//')
-            raw_codeLines[line_number] = raw_codeLines[line_number][:comment_start]
+        elif raw_codeLines[line_number][1].__contains__("//"):
+            comment_start = raw_codeLines[line_number][1].find('//')
+            raw_codeLines[line_number][1] = raw_codeLines[line_number][1][:comment_start]
     
     
 
@@ -76,11 +76,12 @@ def code_preprocessing(file):
         return string
 
     for line_number in range(len(raw_codeLines)):
-        placeHolder = raw_codeLines[line_number]
+        placeHolder = raw_codeLines[line_number][1]
         placeHolder = space_out(placeHolder, ";")
         placeHolder = space_out(placeHolder, "(")
         placeHolder = space_out(placeHolder, ")")
         placeHolder = space_out(placeHolder, ",")
+        raw_codeLines[line_number][1] = placeHolder
 
     return raw_codeLines
 
@@ -175,22 +176,26 @@ def vulnerable_line_adjustment(file_list, file_vulnerabilities, gpu_token):
 def gen_df(file_list, file_vulnerabilities):
     df_dict = {}
     for file in file_list:
+        labeled_dataset = pd.DataFrame(columns=['File', 'Line Number', 'Lines', 'Original Line Number', '(start, end)', 'Label'])
         code = code_preprocessing(file)
-        labeled_dataset = {'File': [], 'Line Number':[], 'Lines':[], '(start, end)': [], 'Label':[]}
-        labeled_dataset = pd.DataFrame(labeled_dataset)
+        # labeled_dataset = {'File': None, 'Line Number': None, 'Lines': None, 'Original Line Number': None, ('start, end'): None, 'Label':None}
         LINE_NUMBER = 0
-
+        raw_code_obj = open(file)
+        raw_code = raw_code_obj.read()
+        raw_code_obj.close()
         for line in range(len(code)):
-            code[line]
-            if (line) in file_vulnerabilities[file]:
-                data = {'File': file,'Line Number': LINE_NUMBER, 'Lines': code[line], '(start, end)': file_vulnerabilities[file], 'Label': 'Insecure'}
-            else:
-                data = {'File': file, 'Line Number': LINE_NUMBER, 'Lines': code[line], '(start, end)': [], 'Label': 'Secure'}
-            labeled_dataset.loc[len(labeled_dataset)] = data
-            LINE_NUMBER+=1
+            if code[line][1]:
+                start = raw_code.find(code[line][1])
+                end = start + len(code[line][1])
+                if (line) in file_vulnerabilities[file]:
+                    data = {'File': file,'Line Number': LINE_NUMBER, 'Lines': code[line], 'Original Line Number': code[line][0], '(start, end)':  (start, end), 'Label': 'Insecure'}
+                else:
+                    data = {'File': file, 'Line Number': LINE_NUMBER, 'Lines': code[line], 'Original Line Number': code[line][0], '(start, end)':  (start, end), 'Label': 'Secure'}
+                labeled_dataset.loc[len(labeled_dataset)] = data
+                LINE_NUMBER+=1
         df_dict[file] = labeled_dataset
 
-    raw_code = list(labeled_dataset['Lines'])
+    # raw_code = list(labeled_dataset['Lines'])
 
     return df_dict
 
@@ -201,5 +206,3 @@ def dataframe_init(gpu_token):
     df_dictionary = gen_df(file_list, file_vulnerabilities)
     # labelled_dataset['Label']=labelled_dataset['Label'].map({"Secure" : 0, "Insecure": 1})
     return df_dictionary
-
-dataframe_init(1)
