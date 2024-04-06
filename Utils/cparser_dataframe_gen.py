@@ -1,6 +1,151 @@
 import pandas as pd
 import os
 import platform
+import re
+
+def find_undefined_function_types(code_list, gpu_token):
+
+    defined_types = set(['int', 'char', 'float', 'double', 'long', 'short', 'void'])
+    undefined_types = set()
+    
+    # Regular expression pattern to match function declarations
+    function_pattern = r'\b([a-zA-Z_]\w*\s*\**)\s+\w+\s*\([^)]*\)\s*{'
+    
+    temp_list = [i[1] for i in code_list]
+    lines = "\n".join(temp_list)
+    temp = lines
+        # Find all function declarations in the content
+    function_matches = re.findall(function_pattern, lines)
+    # modified_lines = [lines]
+    
+    for return_type in function_matches:
+        # Check if the return type is not in the set of defined types
+        if return_type.strip('*') not in defined_types:
+            undefined_types.add(return_type.strip('*'))
+
+            temp = (temp.replace(return_type, 'int'))
+
+    
+    return list(undefined_types), temp
+
+def find_undefined_types_in_variables(code_list, gpu_token):
+
+    cpp_keywords = [
+    "alignas",
+    "alignof",
+    "and",
+    "and_eq",
+    "asm",
+    "auto",
+    "bitand",
+    "bitor",
+    "bool",
+    "break",
+    "case",
+    "catch",
+    "char",
+    "char16_t",
+    "char32_t",
+    "class",
+    "compl",
+    "const",
+    "constexpr",
+    "const_cast",
+    "continue",
+    "decltype",
+    "default",
+    "delete",
+    "do",
+    "double",
+    "dynamic_cast",
+    "else",
+    "enum",
+    "explicit",
+    "export",
+    "extern",
+    "false",
+    "float",
+    "for",
+    "friend",
+    "goto",
+    "if",
+    "inline",
+    "int",
+    "long",
+    "mutable",
+    "namespace",
+    "new",
+    "noexcept",
+    "not",
+    "not_eq",
+    "nullptr",
+    "operator",
+    "or",
+    "or_eq",
+    "private",
+    "protected",
+    "public",
+    "register",
+    "reinterpret_cast",
+    "return",
+    "short",
+    "signed",
+    "sizeof",
+    "static",
+    "static_assert",
+    "static_cast",
+    "struct",
+    "switch",
+    "template",
+    "this",
+    "thread_local",
+    "throw",
+    "true",
+    "try",
+    "typedef",
+    "typeid",
+    "typename",
+    "union",
+    "unsigned",
+    "using",
+    "virtual",
+    "void",
+    "volatile",
+    "wchar_t",
+    "while",
+    "xor",
+    "xor_eq",
+    "%d",
+    "%f",
+    "%s"
+]
+
+    defined_types = {'int', 'char', 'float', 'double', 'long', 'short', 'void'}
+    undefined_types = set()
+
+    variable_pattern = r'\b((?:[a-zA-Z_]\w*\**)\s+\**\s*\**[a-zA-Z_]\w*\[*\w*\]*)\s*(?:,|\s*;|\s*=|\s*\))'
+
+    for line in enumerate(code_list):
+        # content = file.read()
+        # Find all variable declarations in the content
+        variable_matches = re.findall(variable_pattern, line[1][1])
+        for variable_declaration in variable_matches:
+            # Extract the data type from the variable declaration
+            data_type = variable_declaration.split()[0]
+            if data_type == 'd':
+                # print(data_type)
+                pass
+            # Check if the data type is not in the set of defined types
+            elif (data_type not in defined_types) and (data_type not in cpp_keywords):
+                # print(variable_declaration.split()[0].replace(variable_declaration.split()[0], "int ") + variable_declaration.split()[1])
+
+                undefined_types.add(data_type)
+                code_list[line[0]][1] = (line[1][1].replace((variable_declaration.split()[0]+ ' '), 'int '))
+
+
+    return list(undefined_types), code_list
+
+
 
 def path_changes(gpu_token):
     if platform.machine() == 'arm64':
@@ -29,6 +174,8 @@ def code_preprocessing(file):
             if raw_codeLines[line_number][1].startswith("/*") and not(raw_codeLines[line_number][1].__contains__("*/")):
                 comment_lines.append(line_number)
                 multi_line_flag = 1
+            elif raw_codeLines[line_number][1].startswith("/*") and raw_codeLines[line_number][1].endswith("*/"):
+                comment_lines.append(line_number)
             elif raw_codeLines[line_number][1].__contains__("/*") and not(raw_codeLines[line_number][1].startswith("/*")):
                 if raw_codeLines[line_number][1].__contains__("*/"):
                     psuedo_multi_line_start = raw_codeLines[line_number][1].find("/*")
@@ -83,7 +230,7 @@ def code_preprocessing(file):
         placeHolder = space_out(placeHolder, ",")
         raw_codeLines[line_number][1] = placeHolder
 
-    return raw_codeLines
+    return raw_codeLines, comment_lines.reverse()
 
 def comment_finder(file):
     with open(file) as dataset_obj:
@@ -177,15 +324,15 @@ def gen_df(file_list, file_vulnerabilities):
     df_dict = {}
     for file in file_list:
         labeled_dataset = pd.DataFrame(columns=['File', 'Line Number', 'Lines', 'Original Line Number', '(start, end)', 'Label'])
-        code = code_preprocessing(file)
+        code, comments = code_preprocessing(file)
         # labeled_dataset = {'File': None, 'Line Number': None, 'Lines': None, 'Original Line Number': None, ('start, end'): None, 'Label':None}
         LINE_NUMBER = 0
-        raw_code_obj = open(file)
-        raw_code = raw_code_obj.read()
-        raw_code_obj.close()
+        CHAR_SUM = 0
+        with open(file) as raw_code_obj:
+            raw_code = raw_code_obj.readlines()
         for line in range(len(code)):
             if code[line][1]:
-                start = raw_code.find(code[line][1])
+                start = raw_code[code[line][0]].find(code[line][1]) + CHAR_SUM
                 end = start + len(code[line][1])
                 if (line) in file_vulnerabilities[file]:
                     data = {'File': file,'Line Number': LINE_NUMBER, 'Lines': code[line], 'Original Line Number': code[line][0], '(start, end)':  (start, end), 'Label': 'Insecure'}
@@ -193,6 +340,7 @@ def gen_df(file_list, file_vulnerabilities):
                     data = {'File': file, 'Line Number': LINE_NUMBER, 'Lines': code[line], 'Original Line Number': code[line][0], '(start, end)':  (start, end), 'Label': 'Secure'}
                 labeled_dataset.loc[len(labeled_dataset)] = data
                 LINE_NUMBER+=1
+                CHAR_SUM += len(raw_code[code[line][0]])
         df_dict[file] = labeled_dataset
 
     # raw_code = list(labeled_dataset['Lines'])
