@@ -11,18 +11,21 @@ def vec_split(df):
         if label[1] == 1:
             insecure_vector.append(df.loc[label[0]])
         else:
-            secure_vector.append(df.loc[label[0]])
+            if len(df.loc[label[0]]['Lines']) == 14:
+                pass
+            else:           
+                secure_vector.append(df.loc[label[0]])
 
     secure_df = pd.DataFrame(secure_vector)
     insecure_df = pd.DataFrame(insecure_vector)
 
     # return secure_df, insecure_df
     
-    secure_df.reset_index(drop=True, inplace=True)
-    rand_idx = np.random.choice(np.arange(0, len(secure_df)), size=1000, replace=False)
-    for i in rand_idx:
-        secure_df.drop([i],inplace=True)
-    secure_df.reset_index(drop = True, inplace=True)
+    # secure_df.reset_index(drop=True, inplace=True)
+    # rand_idx = np.random.choice(np.arange(0, len(secure_df)), size=1000, replace=False)
+    # for i in rand_idx:
+    #     secure_df.drop([i],inplace=True)
+    # secure_df.reset_index(drop = True, inplace=True)
 
     x_train_secure, x_test_secure, y_train_secure, y_test_secure = train_test_split(secure_df.index.tolist(), secure_df['Label'], random_state=32, test_size = 0.2)
     x_train_secure, x_val_secure, y_train_secure, y_val_secure = train_test_split(x_train_secure, secure_df['Label'][0:len(x_train_secure)], random_state=32, test_size = (1/8))
@@ -53,6 +56,11 @@ def vec_split(df):
         testing_df = pd.concat([testing_df.iloc[:i[1]], new_row, testing_df.iloc[i[1]:]], ignore_index=True)
 
     return training_df, validation_df, testing_df
+
+def emptyline_pop(dataframe):
+    """Remove lines with only empty values from a dataframe"""
+    mask = ~((dataframe.isnull().sum(axis=1))==len(dataframe.columns))
+    return dataframe[mask].reset_index(drop=True)
 
 def tensor_gen(vectors):
 
