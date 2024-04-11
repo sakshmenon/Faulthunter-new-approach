@@ -90,3 +90,16 @@ def model_ver_3(input_shape):
     model.compile(optimizer=keras.optimizers.legacy.Adam(learning_rate=0.0001), loss=keras.losses.BinaryFocalCrossentropy(apply_class_balancing=True,gamma=2),
                 metrics=["accuracy"], run_eagerly=True)
     return model
+
+def model_ver_4(input_shape):
+    model = keras.Sequential()
+
+    model.add(layers.Input((input_shape, 1)))
+    model.add(layers.Conv2D(512, kernel_size=3, activation='relu'))
+    model.add(layers.Conv2D(512, kernel_size=3, activation='relu'))
+    model.add(layers.Flatten())
+    model.add(layers.Dense(2, activation = keras.activations.softmax))
+
+    model.compile(optimizer=keras.optimizers.legacy.Adam(learning_rate=0.0001), loss=keras.losses.binary_crossentropy,
+                metrics=["accuracy"], run_eagerly=True)
+    return model
