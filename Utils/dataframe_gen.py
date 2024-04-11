@@ -14,9 +14,7 @@ def path_changes(gpu_token):
     return dataframe
 
 def code_preprocessing(file):
-    with open(file) as dataset_obj:
-        codeLines = dataset_obj.read()
-
+    
     comment_lines, raw_codeLines = comment_finder(file)
 
     # raw_codeLines = codeLines.replace("\t","").split("\n")
@@ -77,15 +75,15 @@ def code_preprocessing(file):
         return string
 
     for line_number in range(len(raw_codeLines)):
-        placeHolder = raw_codeLines[line_number]
+        placeHolder = raw_codeLines[line_number][1]
         placeHolder = space_out(placeHolder, ";")
         placeHolder = space_out(placeHolder, "(")
         placeHolder = space_out(placeHolder, ")")
         placeHolder = space_out(placeHolder, ",")
         if placeHolder.endswith(";"):
-            raw_codeLines[line_number] = "<start> " + placeHolder.replace(";","<end>")
+            raw_codeLines[line_number][1] = "<start> " + placeHolder.replace(";","<end>")
         elif not(placeHolder.endswith(";")):
-            raw_codeLines[line_number] = "<start> " + placeHolder + " <end>"
+            raw_codeLines[line_number][1] = "<start> " + placeHolder + " <end>"
 
     return raw_codeLines
 
@@ -94,31 +92,32 @@ def comment_finder(file):
         codeLines = dataset_obj.read()
         comment_lines = []
         raw_codeLines = codeLines.replace("\t","").split("\n")
+        raw_codeLines = [[i, raw_codeLines[i]] for i in range(len(raw_codeLines))]
         multi_line_flag = 0
         for line_number in range(len(raw_codeLines)):
             if multi_line_flag:
-                if raw_codeLines[line_number].__contains__("*/"):
+                if raw_codeLines[line_number][1].__contains__("*/"):
                     multi_line_flag = 0
                 comment_lines.append(line_number)
-            elif raw_codeLines[line_number].__contains__("/*"):
-                if raw_codeLines[line_number].lstrip(' ').startswith("/*") and not(raw_codeLines[line_number].__contains__("*/")):
+            elif raw_codeLines[line_number][1].__contains__("/*"):
+                if raw_codeLines[line_number][1].lstrip(' ').startswith("/*") and not(raw_codeLines[line_number][1].__contains__("*/")):
                     comment_lines.append(line_number)
                     multi_line_flag = 1
-                elif raw_codeLines[line_number].__contains__("/*") and not(raw_codeLines[line_number].lstrip(' ').startswith("/*")):
-                    if raw_codeLines[line_number].__contains__("*/"):
-                        psuedo_multi_line_start = raw_codeLines[line_number].find("/*")
-                        psuedo_multi_line_end = raw_codeLines[line_number].find("*/")
-                        temporary_line = raw_codeLines[line_number][:psuedo_multi_line_start] + raw_codeLines[line_number][psuedo_multi_line_end+2:]
-                        raw_codeLines[line_number] = temporary_line
-                elif raw_codeLines[line_number].__contains__("/*") and (raw_codeLines[line_number].lstrip(' ').startswith("/*")):
-                    if raw_codeLines[line_number].__contains__("*/") and raw_codeLines[line_number].endswith("*/"):
+                elif raw_codeLines[line_number][1].__contains__("/*") and not(raw_codeLines[line_number][1].lstrip(' ').startswith("/*")):
+                    if raw_codeLines[line_number][1].__contains__("*/"):
+                        psuedo_multi_line_start = raw_codeLines[line_number][1].find("/*")
+                        psuedo_multi_line_end = raw_codeLines[line_number][1].find("*/")
+                        temporary_line = raw_codeLines[line_number][1][:psuedo_multi_line_start] + raw_codeLines[line_number][1][psuedo_multi_line_end+2:]
+                        raw_codeLines[line_number][1] = temporary_line
+                elif raw_codeLines[line_number][1].__contains__("/*") and (raw_codeLines[line_number][1].lstrip(' ').startswith("/*")):
+                    if raw_codeLines[line_number][1].__contains__("*/") and raw_codeLines[line_number][1].endswith("*/"):
                         comment_lines.append(line_number)
 
-            elif raw_codeLines[line_number].lstrip(' ').startswith("//"):
+            elif raw_codeLines[line_number][1].lstrip(' ').startswith("//"):
                 comment_lines.append(line_number)
-            elif raw_codeLines[line_number].__contains__("//"):
-                comment_start = raw_codeLines[line_number].find('//')
-                raw_codeLines[line_number] = raw_codeLines[line_number][:comment_start]
+            elif raw_codeLines[line_number][1].__contains__("//"):
+                comment_start = raw_codeLines[line_number][1].find('//')
+                raw_codeLines[line_number][1] = raw_codeLines[line_number][1][:comment_start]
     return comment_lines, raw_codeLines
 
 def vulnerable_line_finder(df):
@@ -192,9 +191,9 @@ def gen_df(file_list, file_vulnerabilities):
         for line in range(len(code)):
             if code[line][1]:
                 if (line) in file_vulnerabilities[file]:
-                    data = {'File': file,'Line Number': LINE_NUMBER, 'Lines': code[line], 'Original Line Number': code[line][0], 'Label': 'Insecure'}
+                    data = {'File': file,'Line Number': LINE_NUMBER, 'Lines': code[line][1], 'Original Line Number': code[line][0], 'Label': 'Insecure'}
                 else:
-                    data = {'File': file, 'Line Number': LINE_NUMBER, 'Lines': code[line], 'Original Line Number': code[line][0], 'Label': 'Secure'}
+                    data = {'File': file, 'Line Number': LINE_NUMBER, 'Lines': code[line][1], 'Original Line Number': code[line][0], 'Label': 'Secure'}
                 labeled_dataset.loc[len(labeled_dataset)] = data
                 filewise_labeled_dataset.loc[len(filewise_labeled_dataset)] = data
                 LINE_NUMBER+=1
