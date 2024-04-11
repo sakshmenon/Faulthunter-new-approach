@@ -95,8 +95,8 @@ def model_ver_4(input_shape):
     model = keras.Sequential()
 
     model.add(layers.Input((input_shape, 1)))
-    model.add(layers.Conv2D(512, kernel_size=3, activation='relu'))
-    model.add(layers.Conv2D(512, kernel_size=3, activation='relu'))
+    model.add(layers.Conv1D(512, kernel_size=3, activation='relu'))
+    model.add(layers.Conv1D(256, kernel_size=3, activation='relu'))
     model.add(layers.Flatten())
     model.add(layers.Dense(2, activation = keras.activations.softmax))
 
