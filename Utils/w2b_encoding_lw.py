@@ -10,6 +10,7 @@ parser = c_parser.CParser()
 IF_EXPLORE = {pycparser.c_ast.BinaryOp : {'key':(), 'branches': ('left', 'right')},
               pycparser.c_ast.UnaryOp : {'key': (), 'branches': ('expr')}}
 
+HAMMING_WEIGHT = 20
 def value_search(condition):
             if type(condition) in IF_EXPLORE.keys():
                 branches = IF_EXPLORE[type(condition)]['branches']
@@ -54,6 +55,8 @@ def encoder(vectors):
                     condition  = parent_node.children()[0][1].children()[1][1].children()[0][1].children()[0][1]
                     value = value_search(condition)
                     value = str(bin(value))[2:]
+                    value = value.count('1')
+                    value = 1 if value >= HAMMING_WEIGHT else 0
                     encodedline += ('0' + '0'*(256 - len(value)) + value)
                     vectors[vector]['Encoded Lines'][row[0]] = [eval(i) for i in encodedline]#tuple(encodedline)
                     continue

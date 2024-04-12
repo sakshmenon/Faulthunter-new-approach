@@ -95,8 +95,8 @@ def model_ver_4(input_shape):
     model = keras.Sequential()
 
     model.add(layers.Input((input_shape, 1)))
-    model.add(layers.Dense(256, activation=keras.activations.relu))
-    model.add(layers.Dense(256, activation=keras.activations.relu))
+    model.add(layers.Dense(258, activation=keras.activations.relu))
+    model.add(layers.Dense(258, activation=keras.activations.relu))
     model.add(layers.Dense(2, activation = keras.activations.softmax))
 
     model.compile(optimizer=keras.optimizers.legacy.Adam(learning_rate=0.0001), loss=keras.losses.binary_crossentropy,
