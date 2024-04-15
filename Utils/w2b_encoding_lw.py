@@ -50,7 +50,7 @@ def encoder(vectors):
                 value = 'none'
                 encodedline += '00'
                 vectors[vector]['Encoded Lines'][row[0]] = [eval(i) for i in encodedline]
-                vectors[vector]['Label'][row[0]] = 1
+                vectors[vector]['Label'][row[0]] = 0
                 continue
                 try:
                     parent_node = parser.parse(line)
