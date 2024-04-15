@@ -102,3 +102,16 @@ def model_ver_4(input_shape):
     model.compile(optimizer=keras.optimizers.legacy.Adam(learning_rate=0.0001), loss=keras.losses.binary_crossentropy,
                 metrics=["accuracy"], run_eagerly=True)
     return model
+
+# import keras
+# from keras import layers
+def model_ver_10(input_shape):
+    model = keras.models.Sequential([
+    layers.Dense(4, input_shape=(2,), activation='relu'),  # Hidden layer with 4 units
+    layers.Dense(2, activation='softmax')  # Output layer with 2 units (binary classification)
+    ])
+    
+    model.compile(optimizer='adam',
+              loss='categorical_crossentropy',
+              metrics=['accuracy'])
+    return model
