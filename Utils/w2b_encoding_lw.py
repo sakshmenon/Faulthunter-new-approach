@@ -49,6 +49,7 @@ def encoder(vectors):
                 line = 'int main() { ' + if_line + ' {} return 0; }'
                 value = 'none'
                 encodedline += '00'
+                vectors[vector]['Encoded Lines'][row[0]] = [eval(i) for i in encodedline]
                 continue
                 try:
                     parent_node = parser.parse(line)
