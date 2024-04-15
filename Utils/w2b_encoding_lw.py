@@ -50,6 +50,7 @@ def encoder(vectors):
                 value = 'none'
                 encodedline += '00'
                 vectors[vector]['Encoded Lines'][row[0]] = [eval(i) for i in encodedline]
+                vectors[vector]['Label'][row[0]] = 1
                 continue
                 try:
                     parent_node = parser.parse(line)
@@ -75,6 +76,7 @@ def encoder(vectors):
             else:
                 encodedline += ('1'*2)
                 vectors[vector]['Encoded Lines'][row[0]] = [eval(i) for i in encodedline]#tuple(encodedline)
+                vectors[vector]['Label'][row[0]] = 1
             if len(encodedline)>258:
                 print('??')
     return vectors
