@@ -46,7 +46,7 @@ def encoder(vectors):
                         if_line = (raw_line[:i[0]+1])
                         break
                 # encodedline += '0'
-                line = 'int main() { ' + if_line + ' {} return 0; }'
+                # line = 'int main() { ' + if_line + ' {} return 0; }'
                 value = 'none'
                 encodedline += '00'
                 vectors[vector]['Encoded Lines'][row[0]] = [eval(i) for i in encodedline]
