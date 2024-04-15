@@ -28,8 +28,6 @@ def encoder(vectors):
         for row in enumerate(vectors[vector]['Lines']):
             encodedline = ''
             raw_line = row[1][7:-5].lstrip().rstrip()
-            if row[0] == 123:
-                pass
             if raw_line.startswith('if'):
                 p_c = 0
                 flag = 0
@@ -57,7 +55,8 @@ def encoder(vectors):
                     value = str(bin(value))[2:]
                     value = value.count('1')
                     value = 1 if value >= HAMMING_WEIGHT else 0
-                    encodedline += ('0' + '0'*(256 - len(value)) + value)
+                    encodedline += str(value)
+                    # encodedline += ('0' + '0'*(256 - len(value)) + value)
                     vectors[vector]['Encoded Lines'][row[0]] = [eval(i) for i in encodedline]#tuple(encodedline)
                     continue
 
@@ -65,11 +64,13 @@ def encoder(vectors):
                     pass
 
                 if type(value) == str or value == None:
-                    encodedline += '0'*(257)
+                    # encodedline += '0'*(257)
+                    encodedline += '0'
                     vectors[vector]['Encoded Lines'][row[0]] = [eval(i) for i in encodedline]#tuple(encodedline)
+                    print(encodedline)
 
             else:
-                encodedline += ('1'*258)
+                encodedline += ('1'*2)
                 vectors[vector]['Encoded Lines'][row[0]] = [eval(i) for i in encodedline]#tuple(encodedline)
             if len(encodedline)>258:
                 print('??')
