@@ -48,7 +48,7 @@ def encoder(vectors):
                 # encodedline += '0'
                 line = 'int main() { ' + if_line + ' {} return 0; }'
                 value = 'none'
-                encodedline += '0'
+                encodedline += '00'
                 continue
                 try:
                     parent_node = parser.parse(line)
@@ -72,7 +72,7 @@ def encoder(vectors):
                     print(encodedline)
 
             else:
-                encodedline += ('1'*1)
+                encodedline += ('1'*2)
                 vectors[vector]['Encoded Lines'][row[0]] = [eval(i) for i in encodedline]#tuple(encodedline)
             if len(encodedline)>258:
                 print('??')
