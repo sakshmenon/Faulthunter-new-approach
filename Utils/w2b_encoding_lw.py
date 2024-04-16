@@ -11,17 +11,28 @@ IF_EXPLORE = {pycparser.c_ast.BinaryOp : {'key':(), 'branches': ('left', 'right'
               pycparser.c_ast.UnaryOp : {'key': (), 'branches': ('expr')}}
 
 HAMMING_WEIGHT = 20
-def value_search(condition):
-            if type(condition) in IF_EXPLORE.keys():
-                branches = IF_EXPLORE[type(condition)]['branches']
-                kids = {child[0]: child[1] for child in condition.children()}
-                for branch in branches:
-                    if type(kids[branch]) == pycparser.c_ast.Constant:
+BOOL_DICT = {'true': True, 'false': False, 'null':  False}
+
+RET_FLAG = 0
+def value_search(condition, val_lists):
+        if type(condition) in IF_EXPLORE.keys():
+            branches = IF_EXPLORE[type(condition)]['branches']
+            kids = {child[0]: child[1] for child in condition.children()}
+            for branch in branches:
+                if type(kids[branch]) in IF_EXPLORE.keys():
+                    val_lists = value_search(kids[branch], val_lists)
+                    # val_lists.append(value)
+                elif type(kids[branch]) == pycparser.c_ast.Constant:
+                    if kids[branch].value.startswith('0x'):
+                        value = int(kids[branch].value[2:])
+                    else:
                         value = int(kids[branch].value)
-                        return value
-                    elif type(kids[branch]) in IF_EXPLORE.keys():
-                        value_search(kids[branch])
-            return None
+                    # return value
+                    val_lists.append(value)
+                elif type(kids[branch]) == pycparser.c_ast.ID:
+                     if kids[branch].name.lower() in BOOL_DICT:
+                          val_lists.append(int(BOOL_DICT[kids[branch].name.lower()]))
+        return val_lists
 
 def encoder(vectors):
     for vector in range(len(vectors)):
@@ -63,7 +74,7 @@ def encoder(vectors):
                 try:
                     parent_node = parser.parse(line)
                     condition  = parent_node.children()[0][1].children()[1][1].children()[0][1].children()[0][1]
-                    value = value_search(condition)
+                    value = value_search(condition, [])[0]
                     value = str(bin(value))[2:]
                     value = value.count('1')
                     value = 1 if value <= HAMMING_WEIGHT else 0
