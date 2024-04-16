@@ -166,7 +166,8 @@ def vulnerable_line_adjustment(file_list, file_vulnerabilities, gpu_token):
         for vul_line in range(len(file_vulnerabilities[file])):
             if len(comments) == 0:
                 (file_vulnerabilities[file][vul_line]) = ((file_vulnerabilities[file][vul_line])-1) #??
-                break
+                # break
+                continue
             for num in range(len(comments)):
                 if num == len(comments)-1:
                     if comments[num] > file_vulnerabilities[file][vul_line]:

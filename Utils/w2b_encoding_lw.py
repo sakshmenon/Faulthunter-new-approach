@@ -27,11 +27,19 @@ def encoder(vectors):
     for vector in range(len(vectors)):
         for row in enumerate(vectors[vector]['Lines']):
             encodedline = ''
-            raw_line = row[1][7:-5].lstrip().rstrip()
-            if raw_line.startswith('if'):
+            if row[1][7:-5].lstrip().rstrip().startswith('}'):
+                pass
+            raw_line = row[1][7:-5].lstrip().rstrip().lstrip('}').lstrip()
+            if raw_line.startswith('if') or raw_line.startswith('else'):
+                else_flag = 0
+                if raw_line.startswith('else if'):
+                    else_flag = 4
+                else:
+                    pass
                 p_c = 0
                 flag = 0
                 cond_flag = 0
+                if_line = ''
                 for i in enumerate(raw_line):
                     if i[1] == '(':
                         if flag == 0:
@@ -43,22 +51,22 @@ def encoder(vectors):
                                 cond_flag = 1
                         p_c -= 1
                     if cond_flag:
-                        if_line = (raw_line[:i[0]+1])
+                        if_line = (raw_line[else_flag:i[0]+1])
                         break
                 # encodedline += '0'
-                # line = 'int main() { ' + if_line + ' {} return 0; }'
+                line = 'int main() { ' + if_line + ' {} return 0; }'
                 value = 'none'
-                encodedline += '00'
-                vectors[vector]['Encoded Lines'][row[0]] = [eval(i) for i in encodedline]
-                vectors[vector]['Label'][row[0]] = 0
-                continue
+                encodedline += '1'
+                # vectors[vector]['Encoded Lines'][row[0]] = [eval(i) for i in encodedline]
+                # vectors[vector]['Label'][row[0]] = 0
+                # continue
                 try:
                     parent_node = parser.parse(line)
                     condition  = parent_node.children()[0][1].children()[1][1].children()[0][1].children()[0][1]
                     value = value_search(condition)
                     value = str(bin(value))[2:]
                     value = value.count('1')
-                    value = 1 if value >= HAMMING_WEIGHT else 0
+                    value = 1 if value <= HAMMING_WEIGHT else 0
                     encodedline += str(value)
                     # encodedline += ('0' + '0'*(256 - len(value)) + value)
                     vectors[vector]['Encoded Lines'][row[0]] = [eval(i) for i in encodedline]#tuple(encodedline)
@@ -74,9 +82,9 @@ def encoder(vectors):
                     print(encodedline)
 
             else:
-                encodedline += ('1'*2)
+                encodedline += ('0'*2)
                 vectors[vector]['Encoded Lines'][row[0]] = [eval(i) for i in encodedline]#tuple(encodedline)
-                vectors[vector]['Label'][row[0]] = 1
+                # vectors[vector]['Label'][row[0]] = 1
             if len(encodedline)>258:
                 print('??')
     return vectors
