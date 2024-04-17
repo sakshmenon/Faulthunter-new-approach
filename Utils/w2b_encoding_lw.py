@@ -94,7 +94,7 @@ def encoder(vectors):
 
                 if type(value) == str or value == None:
                     # encodedline += '0'*(257)
-                    encodedline += '0*30'
+                    encodedline += '0'*30
                     vectors[vector]['Encoded Lines'][row[0]] = [eval(i) for i in encodedline]#tuple(encodedline)
                     print(encodedline)
 
