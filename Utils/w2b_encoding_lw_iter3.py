@@ -96,7 +96,7 @@ def encoder3(vectors):
                     # encodedline += '0'*(257)
                     encodedline += '0'
                     vectors[vector]['Encoded Lines'][row[0]] = [eval(i) for i in encodedline]#tuple(encodedline)
-                    print(encodedline)
+                    # print(encodedline)
 
             else:
                 encodedline += ('0'*3)
