@@ -84,7 +84,7 @@ def encoder(vectors):
                     value = str(bin(value))[2:]
                     # value = value.count('1')
                     # value = 1 if value <= HAMMING_WEIGHT else 0
-                    encodedline += (str(value) + '0'*30-len(str(value)))
+                    encodedline += (str(value) + '0'*(30-len(str(value))))
                     # encodedline += ('0' + '0'*(256 - len(value)) + value)
                     vectors[vector]['Encoded Lines'][row[0]] = [eval(i) for i in encodedline]#tuple(encodedline)
                     continue
