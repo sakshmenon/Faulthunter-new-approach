@@ -107,7 +107,7 @@ def model_ver_4(input_shape):
 # from keras import layers
 def model_ver_10(input_shape):
     model = keras.models.Sequential([
-    layers.Dense(4, input_shape=(2,), activation='relu'),  # Hidden layer with 4 units
+    layers.Dense(10, input_shape=(input_shape,), activation='relu'),  # Hidden layer with 4 units
     layers.Dense(2, activation='softmax')  # Output layer with 2 units (binary classification)
     ])
     
