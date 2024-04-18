@@ -122,7 +122,8 @@ def model_ver_6(input_shape):
     layers.Dense(2, activation='softmax')  # Output layer with 2 units (binary classification)
     ])
     
-    model.compile(optimizer='adam',
+    model.compile(optimizer=keras.optimizers.legacy.Adam(learning_rate=0.0001),
               loss='categorical_crossentropy',
-              metrics=['accuracy'])
+              metrics=['accuracy']
+              )
     return model

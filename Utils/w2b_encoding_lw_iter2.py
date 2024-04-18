@@ -8,7 +8,8 @@ import pycparser
 parser = c_parser.CParser()
 
 IF_EXPLORE = {pycparser.c_ast.BinaryOp : {'key':(), 'branches': ('left', 'right')},
-              pycparser.c_ast.UnaryOp : {'key': (), 'branches': ('expr',)}}
+              pycparser.c_ast.UnaryOp : {'key': (), 'branches': ('expr',)},
+              pycparser.c_ast.ID : {}}
 
 HAMMING_WEIGHT = 20
 BOOL_DICT = {'true': True, 'false': False, 'null':  False}
@@ -20,7 +21,10 @@ def value_search(condition, val_lists):
             kids = {child[0]: child[1] for child in condition.children()}
             for branch in branches:
                 if type(kids[branch]) in IF_EXPLORE.keys():
-                    val_lists = value_search(kids[branch], val_lists)
+                    if type(kids[branch]) == pycparser.c_ast.ID:
+                        val_lists.append(1)
+                    else:
+                        val_lists = value_search(kids[branch], val_lists)
                     # val_lists.append(value)
                 elif type(kids[branch]) == pycparser.c_ast.Constant:
                     if kids[branch].value.startswith('0x'):
