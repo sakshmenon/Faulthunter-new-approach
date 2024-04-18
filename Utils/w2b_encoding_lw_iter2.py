@@ -22,7 +22,8 @@ def value_search(condition, val_lists):
             for branch in branches:
                 if type(kids[branch]) in IF_EXPLORE.keys():
                     if type(kids[branch]) == pycparser.c_ast.ID:
-                        val_lists.append(1)
+                        if kids[branch].name.lower() not in BOOL_DICT:
+                            val_lists.append(1)
                     else:
                         val_lists = value_search(kids[branch], val_lists)
                     # val_lists.append(value)
