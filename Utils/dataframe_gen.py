@@ -17,32 +17,6 @@ def code_preprocessing(file):
     
     comment_lines, raw_codeLines = comment_finder(file)
 
-    # raw_codeLines = codeLines.replace("\t","").split("\n")
-    # multi_line_flag = 0
-    # for line_number in range(len(raw_codeLines)):
-    #     if multi_line_flag:
-    #         if raw_codeLines[line_number].__contains__("*/"):
-    #             multi_line_flag = 0
-    #         comment_lines.append(line_number)
-    #     elif raw_codeLines[line_number].__contains__("/*"):
-    #         if raw_codeLines[line_number].startswith("/*") and not(raw_codeLines[line_number].__contains__("*/")):
-    #             comment_lines.append(line_number)
-    #             multi_line_flag = 1
-    #         elif raw_codeLines[line_number].__contains__("/*") and not(raw_codeLines[line_number].startswith("/*")):
-    #             if raw_codeLines[line_number].__contains__("*/"):
-    #                 psuedo_multi_line_start = raw_codeLines[line_number].find("/*")
-    #                 psuedo_multi_line_end = raw_codeLines[line_number].find("*/")
-    #                 temporary_line = raw_codeLines[line_number][:psuedo_multi_line_start] + raw_codeLines[line_number][psuedo_multi_line_end+2:]
-    #                 raw_codeLines[line_number] = temporary_line
-
-    #     elif raw_codeLines[line_number].startswith("//"):
-    #         comment_lines.append(line_number)
-    #     elif raw_codeLines[line_number].__contains__("//"):
-    #         comment_start = raw_codeLines[line_number].find('//')
-    #         raw_codeLines[line_number] = raw_codeLines[line_number][:comment_start]
-    
-    
-
     comment_lines.reverse()
     for i in comment_lines:
         raw_codeLines.pop(i)
