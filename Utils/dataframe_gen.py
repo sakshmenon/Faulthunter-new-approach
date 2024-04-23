@@ -173,6 +173,7 @@ def gen_df(file_list, file_vulnerabilities):
                 filewise_labeled_dataset.loc[len(filewise_labeled_dataset)] = data
                 LINE_NUMBER+=1
                 FILE_LINE_NUMBER+=1
+                
         df_dict[file] = filewise_labeled_dataset
 
     return labeled_dataset, df_dict

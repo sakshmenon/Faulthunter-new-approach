@@ -214,6 +214,8 @@ def comment_finder(file):
                 if raw_codeLines[line_number][1].__contains__("*/"):
                     multi_line_flag = 0
                 comment_lines.append(line_number)
+            elif  raw_codeLines[line_number][1].startswith("#"):
+                comment_lines.append(line_number)
             elif raw_codeLines[line_number][1].__contains__("/*"):
                 if raw_codeLines[line_number][1].lstrip(' ').startswith("/*") and not(raw_codeLines[line_number][1].__contains__("*/")):
                     comment_lines.append(line_number)
