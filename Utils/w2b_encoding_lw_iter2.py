@@ -98,9 +98,9 @@ def encoder2(vectors):
                     encodedline += str(value) 
                     # encodedline += ('0' + '0'*(256 - len(value)) + value)
                     vectors[vector]['Encoded Lines'][row[0]] = [eval(i) for i in encodedline]#tuple(encodedline)
-                    if value == 1:
-                        vectors[vector]['Label'][row[0]] = 1
-                    continue
+                    # if value == 1:
+                    #     vectors[vector]['Label'][row[0]] = 1
+                    # continue
 
                 except:
                     pass
