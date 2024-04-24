@@ -6,10 +6,12 @@ import numpy as np
 def vec_split(df):
     secure_vector = []
     insecure_vector = []
+    drop_list = [490,624,876,1226,2033,2037,2199,4165,4240,4242,4244,4248,4250,4530,4608,4656]
 
     for label in enumerate(df['Label']):
         if label[1] == 1:
-            insecure_vector.append(df.loc[label[0]])
+            if not(df['Line Number'][label[0]] in drop_list):
+                insecure_vector.append(df.loc[label[0]])
         else:
             if len(df.loc[label[0]]['Lines']) == 14:
                 pass
@@ -33,28 +35,28 @@ def vec_split(df):
     x_train_insecure, x_val_insecure, y_train_insecure, y_val_insecure = train_test_split(x_train_insecure, insecure_df['Label'][0:len(x_train_insecure)], random_state=32, test_size = (1/8))
 
     #80%
-    tester = [{'File': secure_df.File[i], 'Line Number': secure_df['Line Number'][i], 'Original Line Number': secure_df['Original Line Number'][i], 'Lines' : secure_df.Lines[i], 'Encoded Lines' : secure_df.Lines[i], 'Label': secure_df.Label[i] } for i in x_train_secure]
+    tester = [{'File': secure_df.File[i], 'Line Number': secure_df['Line Number'][i], 'Original Line Number': secure_df['Original Line Number'][i], 'Lines' : secure_df.Lines[i], 'Value' : secure_df.Value[i], 'Encoded Lines' : secure_df.Lines[i], 'Label': secure_df.Label[i] } for i in x_train_secure]
     training_df = pd.DataFrame(tester)
     rand_idx = np.random.choice(np.arange(0, len(training_df)), size=len(x_train_insecure), replace=False)
 
     for i in enumerate(rand_idx):
-        new_row = pd.DataFrame({'File': insecure_df['File'][x_train_insecure[i[0]]], 'Line Number': insecure_df['Line Number'][x_train_insecure[i[0]]], 'Original Line Number': insecure_df['Original Line Number'][x_train_insecure[i[0]]], 'Lines' : insecure_df['Lines'][x_train_insecure[i[0]]], 'Encoded Lines' : insecure_df['Lines'][x_train_insecure[i[0]]], 'Label': [insecure_df['Label'][x_train_insecure[i[0]]]]})
+        new_row = pd.DataFrame({'File': insecure_df['File'][x_train_insecure[i[0]]], 'Line Number': insecure_df['Line Number'][x_train_insecure[i[0]]], 'Original Line Number': insecure_df['Original Line Number'][x_train_insecure[i[0]]], 'Lines' : insecure_df['Lines'][x_train_insecure[i[0]]], 'Value' : insecure_df['Value'][x_train_insecure[i[0]]], 'Encoded Lines' : insecure_df['Lines'][x_train_insecure[i[0]]], 'Label': [insecure_df['Label'][x_train_insecure[i[0]]]]})
         # new_row = pd.DataFrame({'Lines':insecure_df['Lines'][x_train_insecure[i[0]]],'Encoded Lines' : insecure_df['Lines'][x_train_insecure[i[0]]],'Label':[insecure_df['Label'][x_train_insecure[i[0]]]]})
         training_df = pd.concat([training_df.iloc[:i[1]], new_row, training_df.iloc[i[1]:]], ignore_index=True)
     
-    tester = [{'File': secure_df.File[i], 'Line Number': secure_df['Line Number'][i], 'Original Line Number': secure_df['Original Line Number'][i], 'Lines' : secure_df.Lines[i], 'Encoded Lines' : secure_df.Lines[i], 'Label': secure_df.Label[i] } for i in x_val_secure]
+    tester = [{'File': secure_df.File[i], 'Line Number': secure_df['Line Number'][i], 'Original Line Number': secure_df['Original Line Number'][i], 'Lines' : secure_df.Lines[i], 'Value' : secure_df.Value[i], 'Encoded Lines' : secure_df.Lines[i], 'Label': secure_df.Label[i] } for i in x_val_secure]
     validation_df = pd.DataFrame(tester)
     rand_idx = np.random.choice(np.arange(0, len(validation_df)), size=len(x_val_insecure), replace=False)
     for i in enumerate(rand_idx):
-        new_row = pd.DataFrame({'File': insecure_df['File'][x_val_insecure[i[0]]], 'Line Number': insecure_df['Line Number'][x_val_insecure[i[0]]], 'Original Line Number': insecure_df['Original Line Number'][x_val_insecure[i[0]]], 'Lines' : insecure_df['Lines'][x_val_insecure[i[0]]], 'Encoded Lines' : insecure_df['Lines'][x_val_insecure[i[0]]], 'Label': [insecure_df['Label'][x_val_insecure[i[0]]]]})
+        new_row = pd.DataFrame({'File': insecure_df['File'][x_val_insecure[i[0]]], 'Line Number': insecure_df['Line Number'][x_val_insecure[i[0]]], 'Original Line Number': insecure_df['Original Line Number'][x_val_insecure[i[0]]], 'Lines' : insecure_df['Lines'][x_val_insecure[i[0]]], 'Value' : insecure_df['Value'][x_val_insecure[i[0]]], 'Encoded Lines' : insecure_df['Lines'][x_val_insecure[i[0]]], 'Label': [insecure_df['Label'][x_val_insecure[i[0]]]]})
         # new_row = pd.DataFrame({'Lines':insecure_df['Lines'][x_val_insecure[i[0]]],'Encoded Lines' : insecure_df['Lines'][x_val_insecure[i[0]]],'Label':[insecure_df['Label'][x_val_insecure[i[0]]]]})
         validation_df = pd.concat([validation_df.iloc[:i[1]], new_row, validation_df.iloc[i[1]:]], ignore_index=True)
 
-    tester = [{'File': secure_df.File[i], 'Line Number': secure_df['Line Number'][i], 'Original Line Number': secure_df['Original Line Number'][i], 'Lines' : secure_df.Lines[i], 'Encoded Lines' : secure_df.Lines[i], 'Label': secure_df.Label[i] } for i in x_test_secure]
+    tester = [{'File': secure_df.File[i], 'Line Number': secure_df['Line Number'][i], 'Original Line Number': secure_df['Original Line Number'][i], 'Lines' : secure_df.Lines[i], 'Value' : secure_df.Value[i], 'Encoded Lines' : secure_df.Lines[i], 'Label': secure_df.Label[i] } for i in x_test_secure]
     testing_df = pd.DataFrame(tester)
     rand_idx = np.random.choice(np.arange(0, len(testing_df)), size=len(x_test_insecure), replace=False)
     for i in enumerate(rand_idx):
-        new_row = pd.DataFrame({'File': insecure_df['File'][x_test_insecure[i[0]]], 'Line Number': insecure_df['Line Number'][x_test_insecure[i[0]]], 'Original Line Number': insecure_df['Original Line Number'][x_test_insecure[i[0]]], 'Lines' : insecure_df['Lines'][x_test_insecure[i[0]]], 'Encoded Lines' : insecure_df['Lines'][x_test_insecure[i[0]]], 'Label': [insecure_df['Label'][x_test_insecure[i[0]]]]})
+        new_row = pd.DataFrame({'File': insecure_df['File'][x_test_insecure[i[0]]], 'Line Number': insecure_df['Line Number'][x_test_insecure[i[0]]], 'Original Line Number': insecure_df['Original Line Number'][x_test_insecure[i[0]]], 'Lines' : insecure_df['Lines'][x_test_insecure[i[0]]], 'Value' : insecure_df['Value'][x_test_insecure[i[0]]], 'Encoded Lines' : insecure_df['Lines'][x_test_insecure[i[0]]], 'Label': [insecure_df['Label'][x_test_insecure[i[0]]]]})
         # new_row = pd.DataFrame({'Lines':insecure_df['Lines'][x_test_insecure[i[0]]],'Encoded Lines':insecure_df['Lines'][x_test_insecure[i[0]]],'Label':[insecure_df['Label'][x_test_insecure[i[0]]]]})
         testing_df = pd.concat([testing_df.iloc[:i[1]], new_row, testing_df.iloc[i[1]:]], ignore_index=True)
 

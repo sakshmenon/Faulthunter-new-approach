@@ -1,6 +1,11 @@
 import pandas as pd
 import os
 import platform
+import re
+from pycparser import c_parser, c_generator
+import pycparser
+
+parser = c_parser.CParser()
 
 def path_changes(gpu_token):
     if platform.machine() == 'arm64':
@@ -137,7 +142,11 @@ def vulnerable_line_adjustment(file_list, file_vulnerabilities, gpu_token):
     os.chdir(pth)
     for file in file_list:
         comments, raw_code = comment_finder(file)
+        if file == 'SmartLock_HardwareDriver main.c':
+            pass
         for vul_line in range(len(file_vulnerabilities[file])):
+            if vul_line == 84:
+                pass
             if len(comments) == 0:
                 (file_vulnerabilities[file][vul_line]) = ((file_vulnerabilities[file][vul_line])-1) #??
                 # break
@@ -155,25 +164,70 @@ def vulnerable_line_adjustment(file_list, file_vulnerabilities, gpu_token):
                     break
     return file_vulnerabilities
 
+def cond_extract(else_flag, raw_line):
+    p_c = 0
+    flag = 0
+    cond_flag = 0
+    branch_line = ''
+    for i in enumerate(raw_line):
+        if i[1] == '(':
+            if flag == 0:
+                flag = 1
+            p_c+=1
+        elif i[1] == ')':
+            if flag == 1:
+                if p_c == 1:
+                    cond_flag = 1
+            p_c -= 1
+        if cond_flag:
+            branch_line = (raw_line[else_flag:i[0]+1])
+            break
+    return branch_line
+
+
 def gen_df(file_list, file_vulnerabilities):
     df_dict = {}
-    labeled_dataset = pd.DataFrame(columns=['File', 'Line Number', 'Lines', 'Original Line Number', 'Label'])
+    labeled_dataset = pd.DataFrame(columns=['File', 'Line Number', 'Lines', 'Value', 'Original Line Number', 'Label'])
     LINE_NUMBER = 0
+    patterns = r'\w+\s*=\s*\d+'
     for file in file_list:
         code = code_preprocessing(file)
-        filewise_labeled_dataset = pd.DataFrame(columns=['File', 'Line Number', 'Lines', 'Original Line Number', 'Label'])
+        filewise_labeled_dataset = pd.DataFrame(columns=['File', 'Line Number', 'Lines', 'Value', 'Original Line Number', 'Label'])
         FILE_LINE_NUMBER = 0
+        ASSIGNMENT_FLAG = 0
+        ASSIGNMENT_FLAG_DICT = {}
         for line in range(len(code)):
             if code[line][1]:
+                matches = re.findall(patterns, code[line][1])
                 if (line) in file_vulnerabilities[file]:
-                    data = {'File': file,'Line Number': LINE_NUMBER, 'Lines': code[line][1], 'Original Line Number': code[line][0], 'Label': 'Insecure'}
+                    data = {'File': file,'Line Number': LINE_NUMBER, 'Lines': code[line][1], 'Value': "Not Defined",'Original Line Number': code[line][0], 'Label': 'Insecure'}
                 else:
-                    data = {'File': file, 'Line Number': LINE_NUMBER, 'Lines': code[line][1], 'Original Line Number': code[line][0], 'Label': 'Secure'}
+                    data = {'File': file, 'Line Number': LINE_NUMBER, 'Lines': code[line][1], 'Value': "Not Defined",'Original Line Number': code[line][0], 'Label': 'Secure'}
                 labeled_dataset.loc[len(labeled_dataset)] = data
                 filewise_labeled_dataset.loc[len(filewise_labeled_dataset)] = data
                 LINE_NUMBER+=1
                 FILE_LINE_NUMBER+=1
-                
+            # if matches:
+            #     ASSIGNMENT_FLAG_DICT[matches[0].split('=')[0]] = matches[0].split('=')[1]
+            #     stripped_line = code[line][1][7:-5].lstrip().lstrip('}').lstrip()
+            #     else_flag = 0
+            #     if stripped_line.startswith('else if'):
+            #         else_flag = 4
+            #     if stripped_line.startswith('if') or stripped_line.startswith('else if'):
+            #         if_line = cond_extract(else_flag, stripped_line)
+            #         line = 'int main() { ' + if_line + ' {} return 0; }'
+            #         try:
+            #             parent_node = parser.parse(line)
+            #             condition  = parent_node.children()[0][1].children()[1][1].children()[0][1].children()[0][1]
+            #             if type(condition) == pycparser.c_ast.ID:
+            #                 if condition.name in ASSIGNMENT_FLAG_DICT.keys():
+            #                     labeled_dataset['Value'][len(labeled_dataset)] = ASSIGNMENT_FLAG_DICT[condition.name]
+            #                     filewise_labeled_dataset['Value'][len(filewise_labeled_dataset)] = ASSIGNMENT_FLAG_DICT[condition.name]
+            #         except:
+            #             pass
+
+
+
         df_dict[file] = filewise_labeled_dataset
 
     return labeled_dataset, df_dict

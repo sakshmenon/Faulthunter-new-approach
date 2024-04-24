@@ -52,25 +52,10 @@ def encoder(vectors):
                     encodedline += '01'
                 else:
                     encodedline += '00'
-
-                p_c = 0
-                flag = 0
-                cond_flag = 0
-                branch_line = ''
-                for i in enumerate(raw_line):
-                    if i[1] == '(':
-                        if flag == 0:
-                            flag = 1
-                        p_c+=1
-                    elif i[1] == ')':
-                        if flag == 1:
-                            if p_c == 1:
-                                cond_flag = 1
-                        p_c -= 1
-                    if cond_flag:
-                        branch_line = (raw_line[else_flag:i[0]+1])
-                        break
                 # encodedline += '0'
+                    
+                branch_line = cond_extract(else_flag, raw_line)
+
                 line = 'int main() { ' + branch_line + ' {} return 0; }'
                 value = 'none'
                 # encodedline += '1'
@@ -105,3 +90,23 @@ def encoder(vectors):
             if len(encodedline)>258:
                 print('??')
     return vectors
+
+def cond_extract(else_flag, raw_line):
+    p_c = 0
+    flag = 0
+    cond_flag = 0
+    branch_line = ''
+    for i in enumerate(raw_line):
+        if i[1] == '(':
+            if flag == 0:
+                flag = 1
+            p_c+=1
+        elif i[1] == ')':
+            if flag == 1:
+                if p_c == 1:
+                    cond_flag = 1
+            p_c -= 1
+        if cond_flag:
+            branch_line = (raw_line[else_flag:i[0]+1])
+            break
+    return branch_line

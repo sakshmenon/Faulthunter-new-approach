@@ -45,8 +45,7 @@ static gboolean encrypt_or_decrypt(FILE *fd, FILE *out, const uint8_t *key, gboo
 {
 	/* Allow enough space in output buffer for additional block */
 	unsigned char inbuf[ENC_SEC_SIZE], outbuf[ENC_SEC_SIZE];
-	g_autoptr(EVP_CIPHER_CTX) ;
-	ctx = NULL;
+	g_autoptr(EVP_CIPHER_CTX) ctx = NULL;
 	int ret;
 	const EVP_CIPHER *cipher = EVP_aes_256_cbc();
 	guint64 sector_count = 0;
