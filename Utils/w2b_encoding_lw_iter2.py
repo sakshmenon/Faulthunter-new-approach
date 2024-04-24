@@ -89,7 +89,8 @@ def encoder2(vectors):
                     parent_node = parser.parse(line)
                     condition  = parent_node.children()[0][1].children()[1][1].children()[0][1].children()[0][1]
                     # if type(condition) == pycparser.c_ast.ID:
-                    #     value = 1
+                    #     value = 0
+                    #     continue
                     # else:
                     value = value_search(condition, [], 0)[0]
                     value = str(bin(value))[2:]

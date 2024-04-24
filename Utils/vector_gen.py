@@ -6,7 +6,7 @@ import numpy as np
 def vec_split(df):
     secure_vector = []
     insecure_vector = []
-    drop_list = []#[490,624,876,1226,2033,2037,2199,4165,4240,4242,4244,4248,4250,4530,4608,4656]
+    drop_list = [490,624,876,1226,2033,2037,2199,4165,4240,4242,4244,4248,4250,4530,4608,4656]
 
     for label in enumerate(df['Label']):
         if label[1] == 1:
