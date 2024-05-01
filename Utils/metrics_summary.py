@@ -32,7 +32,7 @@ def precision(true_positives, false_positives):
         return  true_positives / denom
 
 def recall(true_positives, false_negetives):
-    if false_negetives == 0:
+    if (false_negetives == 0) and (true_positives == 0):
         return 0
     else:
         return true_positives/(true_positives + false_negetives)

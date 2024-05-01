@@ -6,6 +6,8 @@ from pycparser import c_parser, c_generator
 import pycparser
 
 parser = c_parser.CParser()
+DEF_DICT = {}
+DEC_DICT = {}
 
 def path_changes(gpu_token):
     if platform.machine() == 'arm64':
@@ -184,21 +186,40 @@ def cond_extract(else_flag, raw_line):
             break
     return branch_line
 
+def find_definition_statements(code):
+    patterns = r'\w+\s*=\s*\d+'
+    definition = []
+    for line in code:
+        matches = re.findall(patterns, line[1])
+        if matches:
+            definition.append([matches[0].split('=')[0],matches[0].split('=')[1]])
+    return definition
+
+def find_declaration_statements(code):
+    variable_pattern = r'\b((?:[a-zA-Z_]\w*\**)\s+\**\s*\**[a-zA-Z_]\w*\[*\w*\]*)\s*(?:,|\s*;|\s*=|\s*\))'
+    key_list = ['int', 'bool', 'char']
+    declarations = []
+    for line in code:
+        statements = re.findall(variable_pattern, line[1])
+        if statements:
+            if statements[0].split()[0] in key_list:
+                declarations.append([statements[0].split()[0],statements[0].split()[1]])
+    return declarations
 
 def gen_df(file_list, file_vulnerabilities):
     df_dict = {}
     labeled_dataset = pd.DataFrame(columns=['File', 'Line Number', 'Lines', 'Value', 'Original Line Number', 'Label'])
     LINE_NUMBER = 0
-    patterns = r'\w+\s*=\s*\d+'
     for file in file_list:
         code = code_preprocessing(file)
         filewise_labeled_dataset = pd.DataFrame(columns=['File', 'Line Number', 'Lines', 'Value', 'Original Line Number', 'Label'])
         FILE_LINE_NUMBER = 0
-        ASSIGNMENT_FLAG = 0
-        ASSIGNMENT_FLAG_DICT = {}
+        dec_matches = find_declaration_statements(code)
+        def_matches = find_definition_statements(code)
+        DEC_DICT[file] = dec_matches
+        DEF_DICT[file] = def_matches
         for line in range(len(code)):
             if code[line][1]:
-                matches = re.findall(patterns, code[line][1])
                 if (line) in file_vulnerabilities[file]:
                     data = {'File': file,'Line Number': LINE_NUMBER, 'Lines': code[line][1], 'Value': "Not Defined",'Original Line Number': code[line][0], 'Label': 'Insecure'}
                 else:
@@ -207,27 +228,6 @@ def gen_df(file_list, file_vulnerabilities):
                 filewise_labeled_dataset.loc[len(filewise_labeled_dataset)] = data
                 LINE_NUMBER+=1
                 FILE_LINE_NUMBER+=1
-            # if matches:
-            #     ASSIGNMENT_FLAG_DICT[matches[0].split('=')[0]] = matches[0].split('=')[1]
-            #     stripped_line = code[line][1][7:-5].lstrip().lstrip('}').lstrip()
-            #     else_flag = 0
-            #     if stripped_line.startswith('else if'):
-            #         else_flag = 4
-            #     if stripped_line.startswith('if') or stripped_line.startswith('else if'):
-            #         if_line = cond_extract(else_flag, stripped_line)
-            #         line = 'int main() { ' + if_line + ' {} return 0; }'
-            #         try:
-            #             parent_node = parser.parse(line)
-            #             condition  = parent_node.children()[0][1].children()[1][1].children()[0][1].children()[0][1]
-            #             if type(condition) == pycparser.c_ast.ID:
-            #                 if condition.name in ASSIGNMENT_FLAG_DICT.keys():
-            #                     labeled_dataset['Value'][len(labeled_dataset)] = ASSIGNMENT_FLAG_DICT[condition.name]
-            #                     filewise_labeled_dataset['Value'][len(filewise_labeled_dataset)] = ASSIGNMENT_FLAG_DICT[condition.name]
-            #         except:
-            #             pass
-
-
-
         df_dict[file] = filewise_labeled_dataset
 
     return labeled_dataset, df_dict
@@ -238,4 +238,4 @@ def dataframe_init(gpu_token):
     file_vulnerabilities = vulnerable_line_adjustment(file_list, file_vulnerabilities, gpu_token)
     labelled_dataset, df_dict = gen_df(file_list, file_vulnerabilities)
     labelled_dataset['Label']=labelled_dataset['Label'].map({"Secure" : 0, "Insecure": 1})
-    return labelled_dataset, df_dict
+    return labelled_dataset, df_dict, DEF_DICT, DEC_DICT

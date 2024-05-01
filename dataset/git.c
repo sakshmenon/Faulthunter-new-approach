@@ -1,5 +1,8 @@
-#include "cryptlib.h"
-static uint64_t rbuf_hash_cb(void *instance, void *env) {
-    if  ( rand (  ) & 1 ) {}
-
+var1 = 1000;
+var2 = "Hello";
+int main() {
+    if (var1) {}
+    int abc;
+    if (abc) {}
+    return 0;
 }

@@ -43,16 +43,16 @@ def value_search(condition, val_lists, depth):
 
         return val_lists
 
-def encoder2(vectors):
+def encoder2(vectors, DEF_DICT, DEC_DICT):
     for vector in range(len(vectors)):
         for row in enumerate(vectors[vector]['Lines']):
             encodedline = ''
-            if row[1][7:-5].lstrip().rstrip().startswith('}'):
-                pass
             raw_line = row[1][7:-5].lstrip().rstrip().lstrip('}').lstrip()
-            if raw_line.startswith('if') or raw_line.startswith('else'):
+            if raw_line.startswith('while') and vectors[vector]['Label'][row[0]] == 1:
+                pass
+            if raw_line.startswith('if') or raw_line.startswith('else') or raw_line.startswith('while'):
                 else_flag = 0
-                if raw_line.startswith('if'):
+                if raw_line.startswith('if') or raw_line.startswith('while'):
                     encodedline += '1'
                 elif raw_line.startswith('else if'):
                     else_flag = 4
@@ -78,7 +78,6 @@ def encoder2(vectors):
                     if cond_flag:
                         branch_line = (raw_line[else_flag:i[0]+1])
                         break
-                # encodedline += '0'
                 line = 'int main() { ' + branch_line + ' {} return 0; }'
                 value = 'none'
                 # encodedline += '1'
@@ -88,11 +87,22 @@ def encoder2(vectors):
                 try:
                     parent_node = parser.parse(line)
                     condition  = parent_node.children()[0][1].children()[1][1].children()[0][1].children()[0][1]
-                    # if type(condition) == pycparser.c_ast.ID:
-                    #     value = 0
-                    #     continue
-                    # else:
-                    value = value_search(condition, [], 0)[0]
+                    if (type(condition) == pycparser.c_ast.ID) or (type(condition) == pycparser.c_ast.UnaryOp):
+                        if (type(condition) == pycparser.c_ast.UnaryOp):
+                            variable = condition.children()[0][1].name
+                        else:
+                            variable = condition.name
+                        if DEF_DICT:
+                            for i in enumerate(DEF_DICT[vectors[vector]['File'][row[0]]]):
+                                if variable == i[1][0]:
+                                    value = i[1][1]
+                        var_type = 0
+                        if DEC_DICT:
+                            for i in enumerate(DEC_DICT[vectors[vector]['File'][row[0]]]):
+                                if variable in i[1][1]:
+                                    value = 0
+                    else:
+                        value = value_search(condition, [], 0)[0]
                     value = str(bin(value))[2:]
                     value = value.count('1')
                     value = 1 if value <= HAMMING_WEIGHT else 0
