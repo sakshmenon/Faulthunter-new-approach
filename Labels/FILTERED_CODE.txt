@@ -3705,7 +3705,6 @@
 <start> return g_quark_from_static_string ( "r_crypt_error_quark" )  ;  <end>
 <start> } <end>
 <start>  <end>
-<start> G_DEFINE_AUTOPTR_CLEANUP_FUNC ( EVP_CIPHER_CTX ,  EVP_CIPHER_CTX_free )  ;  <end>
 <start>  <end>
 <start> static void iv_plain64 ( guint8 *iv ,  guint iv_size ,  guint64 sector )  <end>
 <start> { <end>
@@ -3721,7 +3720,8 @@
 <start> { <end>
 <start> /* Allow enough space in output buffer for additional block */ <end>
 <start> unsigned char inbuf[ENC_SEC_SIZE] ,  outbuf[ENC_SEC_SIZE] ;  <end>
-<start> g_autoptr ( EVP_CIPHER_CTX )  ctx = NULL ;  <end>
+<start> g_autoptr ( EVP_CIPHER_CTX )  ;  <end>
+<start> ctx = NULL ;  <end>
 <start> int ret ;  <end>
 <start> const EVP_CIPHER *cipher = EVP_aes_256_cbc (  )  ;  <end>
 <start> guint64 sector_count = 0 ;  <end>

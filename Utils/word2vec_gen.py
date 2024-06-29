@@ -68,3 +68,4 @@ def word2vec_init(original_df, vectors, gpu_token):
             vectors[i]['Encoded Lines'][vector[0]] = np.array(vector[1]).astype(dtype="float32")
             
     return vectors, inverse_vocab
+
