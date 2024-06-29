@@ -5,7 +5,9 @@ int main(void)
     int result = 1;
     if (result == 1)
     {
-        printf("Executing critical code...\n");
+        if (result == 1) {
+            printf("Executing critical code...\n");
+        }
     }
     else
     {
