@@ -187,6 +187,7 @@ def cond_extract(else_flag, raw_line):
     return branch_line
 
 def find_definition_statements(code):
+    # patterns = r'\w+\s*=\s*(?:\d+|NULL)'
     patterns = r'\w+\s*=\s*\d+'
     definition = []
     for line in code:
@@ -197,7 +198,7 @@ def find_definition_statements(code):
 
 def find_declaration_statements(code):
     variable_pattern = r'\b((?:[a-zA-Z_]\w*\**)\s+\**\s*\**[a-zA-Z_]\w*\[*\w*\]*)\s*(?:,|\s*;|\s*=|\s*\))'
-    key_list = ['int', 'bool', 'char']
+    key_list = ['int', 'bool']
     declarations = []
     for line in code:
         statements = re.findall(variable_pattern, line[1])

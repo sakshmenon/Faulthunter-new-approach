@@ -32,13 +32,11 @@ def value_search(condition, val_lists, depth):
                     val_lists.append(int(BOOL_DICT[kids[branch].name.lower()]))
             elif type(kids[branch]) in IF_EXPLORE.keys():
                 val_lists = value_search(kids[branch], val_lists, depth)
-                # val_lists.append(value)
             elif type(kids[branch]) == pycparser.c_ast.Constant:
                 if kids[branch].value.startswith('0x'):
                     value = int(kids[branch].value, 16)
                 else:
                     value = int(kids[branch].value)
-                # return value
                 val_lists.append(value)
 
         return val_lists
@@ -80,10 +78,7 @@ def encoder2(vectors, DEF_DICT, DEC_DICT):
                         break
                 line = 'int main() { ' + branch_line + ' {} return 0; }'
                 value = 'none'
-                # encodedline += '1'
-                # vectors[vector]['Encoded Lines'][row[0]] = [eval(i) for i in encodedline]
-                # vectors[vector]['Label'][row[0]] = 0
-                # continue
+
                 try:
                     parent_node = parser.parse(line)
                     condition  = parent_node.children()[0][1].children()[1][1].children()[0][1].children()[0][1]
@@ -107,25 +102,18 @@ def encoder2(vectors, DEF_DICT, DEC_DICT):
                     value = value.count('1')
                     value = 1 if value <= HAMMING_WEIGHT else 0
                     encodedline += str(value) 
-                    # encodedline += ('0' + '0'*(256 - len(value)) + value)
-                    vectors[vector]['Encoded Lines'][row[0]] = [eval(i) for i in encodedline]#tuple(encodedline)
-                    # if value == 1:
-                    #     vectors[vector]['Label'][row[0]] = 1
-                    # continue
+                    vectors[vector]['Encoded Lines'][row[0]] = [eval(i) for i in encodedline]
 
                 except:
                     pass
 
                 if type(value) == str or value == None:
-                    # encodedline += '0'*(257)
                     encodedline += '0'
-                    vectors[vector]['Encoded Lines'][row[0]] = [eval(i) for i in encodedline]#tuple(encodedline)
-                    # print(encodedline)
+                    vectors[vector]['Encoded Lines'][row[0]] = [eval(i) for i in encodedline]
 
             else:
                 encodedline += ('0'*2)
-                vectors[vector]['Encoded Lines'][row[0]] = [eval(i) for i in encodedline]#tuple(encodedline)
-                # vectors[vector]['Label'][row[0]] = 1
+                vectors[vector]['Encoded Lines'][row[0]] = [eval(i) for i in encodedline]
             if len(encodedline)>258:
                 print('??')
     return vectors
