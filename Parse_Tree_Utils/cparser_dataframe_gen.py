@@ -284,15 +284,25 @@ def vulnerable_line_adjustment(file_list, file_vulnerabilities, gpu_token):
 
     os.chdir(pth)
     for file in file_list:
-        comments = comment_finder(file)
+        comments, raw_code = comment_finder(file)
+        # if file == 'SmartLock_HardwareDriver main.c':
+        #     pass
         for vul_line in range(len(file_vulnerabilities[file])):
+            # if vul_line == 84:
+            #     pass
+            if len(comments) == 0:
+                (file_vulnerabilities[file][vul_line]) = ((file_vulnerabilities[file][vul_line])-1) 
+                continue
             for num in range(len(comments)):
                 if num == len(comments)-1:
-                    (file_vulnerabilities[file][vul_line][1]) = ((file_vulnerabilities[file][vul_line][1])-(len(comments)))
-                elif comments[num] < (file_vulnerabilities[file][vul_line][1]):
+                    if comments[num] > file_vulnerabilities[file][vul_line]:
+                        (file_vulnerabilities[file][vul_line]) = ((file_vulnerabilities[file][vul_line])-(num+1)) #??
+                    else:
+                        (file_vulnerabilities[file][vul_line]) = ((file_vulnerabilities[file][vul_line])-(len(comments)+1))
+                elif comments[num] < (file_vulnerabilities[file][vul_line]):
                     None
-                elif comments[num] > (file_vulnerabilities[file][vul_line][1]):
-                    (file_vulnerabilities[file][vul_line][1]) = ((file_vulnerabilities[file][vul_line][1])-(num+1))
+                elif comments[num] > (file_vulnerabilities[file][vul_line]):
+                    (file_vulnerabilities[file][vul_line]) = ((file_vulnerabilities[file][vul_line])-(num+1)) #??
                     break
     return file_vulnerabilities
 
